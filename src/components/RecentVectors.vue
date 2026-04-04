@@ -1,19 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted } from 'vue';
 import RecentVectorBox from './RecentVectorBox.vue';
-import type { VectorProperties } from '@/interfaces/VectorProperties';
+import { useVectors } from '@/stores/vectors';
 
-const recentVectors = ref<VectorProperties[]>([
-	{
-		id: window.crypto.randomUUID(),
-		name: 'Cool Logo',
-		created: Date.now(),
-		modified: Date.now(),
-		width: 500,
-		height: 500,
-		synced: false,
-	},
-]);
+const vectorsStore = useVectors();
+
+onMounted(async () => {
+	await vectorsStore.refreshVectors();
+});
 </script>
 
 <template>
@@ -21,7 +15,7 @@ const recentVectors = ref<VectorProperties[]>([
 		<h3>Recent vectors</h3>
 		<div class="vectors-box">
 			<RecentVectorBox
-				v-for="vector in recentVectors"
+				v-for="vector in vectorsStore.vectorsProperties"
 				:key="vector.id"
 				v-bind="vector"
 			></RecentVectorBox>
@@ -41,5 +35,6 @@ const recentVectors = ref<VectorProperties[]>([
 	display: grid;
 	grid-template-columns: repeat(6, 1fr);
 	grid-template-rows: auto;
+	gap: 20px;
 }
 </style>

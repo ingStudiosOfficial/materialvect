@@ -29,3 +29,7 @@ button {
 	border: none;
 	font-family: inherit;
 }
+
+input {
+	font-family: inherit;
+}

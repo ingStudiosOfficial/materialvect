@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import type { VectorProperties } from '@/interfaces/VectorProperties';
+import router from '@/router';
 import '@m3e/web/card';
 
 const props = defineProps<VectorProperties>();
+
+function openVector() {
+	router.push({ name: 'editor', params: { id: props.id } });
+}
 </script>
 
 <template>
-	<m3e-card class="vector-wrapper" actionable>
+	<m3e-card class="vector-wrapper" actionable @click="openVector()">
 		<div slot="content">
 			<p>{{ props.name }}</p>
 		</div>
