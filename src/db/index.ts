@@ -1,4 +1,4 @@
-import type { VectorFile } from '@/interfaces/VectorFile';
+import type { VectorProperties } from '@/interfaces/VectorProperties';
 import { openDB, type IDBPDatabase } from 'idb';
 
 async function getDb(): Promise<IDBPDatabase<unknown>> {
@@ -14,6 +14,11 @@ async function getDb(): Promise<IDBPDatabase<unknown>> {
 					if (!db.objectStoreNames.contains('vectors')) {
 						db.createObjectStore('vectors', { keyPath: 'id' });
 					}
+
+				case 1:
+					if (!db.objectStoreNames.contains('handle')) {
+						db.createObjectStore('handle');
+					}
 			}
 		},
 	});
@@ -21,19 +26,29 @@ async function getDb(): Promise<IDBPDatabase<unknown>> {
 	return db;
 }
 
-export async function upsertVector(vectorFile: VectorFile) {
+export async function upsertVector(vectorProperties: VectorProperties) {
 	const db = await getDb();
-	await db.put('vectors', vectorFile);
+	await db.put('vectors', vectorProperties);
 }
 
-export async function getVector(id: string): Promise<VectorFile> {
+export async function getVector(id: string): Promise<VectorProperties> {
 	const db = await getDb();
-	const vectorFile = await db.get('vectors', id);
-	return vectorFile;
+	const vectorProperties = await db.get('vectors', id);
+	return vectorProperties;
 }
 
-export async function getAllVectors(): Promise<VectorFile[]> {
+export async function getAllVectors(): Promise<VectorProperties[]> {
 	const db = await getDb();
-	const vectorFiles = await db.getAll('vectors');
-	return vectorFiles;
+	const vectorProperties = await db.getAll('vectors');
+	return vectorProperties;
+}
+
+export async function saveDirHandle(handle: FileSystemDirectoryHandle) {
+	const db = await getDb();
+	await db.put('handle', handle, 'root');
+}
+
+export async function getDirHandle(): Promise<FileSystemDirectoryHandle | null> {
+	const db = await getDb();
+	return await db.get('handle', 'root');
 }

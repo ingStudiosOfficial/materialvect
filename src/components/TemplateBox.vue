@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { createNewVector } from '@/utils/vector';
 import '@m3e/web/card';
 
 interface ComponentProps {
@@ -11,7 +12,12 @@ const props = defineProps<ComponentProps>();
 </script>
 
 <template>
-	<m3e-card class="template-box" actionable variant="filled">
+	<m3e-card
+		class="template-box"
+		actionable
+		variant="filled"
+		@click="createNewVector(`Untitled ${props.name}`, props.width, props.height)"
+	>
 		<div class="box-content" slot="content">
 			<p class="template-name">{{ props.name }}</p>
 			<p>{{ props.width }}px x {{ props.height }}px</p>

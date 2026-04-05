@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { getVector, upsertVector } from '@/db';
-import type { VectorFile } from '@/interfaces/VectorFile';
+import { upsertVector } from '@/db';
+import type { Mvct } from '@/interfaces/Mvct';
+import { fetchProjectFromDisk, saveProjectToDisk } from '@/utils/filesys';
 import '@m3e/web/app-bar';
 import '@m3e/web/form-field';
 import '@m3e/web/loading-indicator';
+import { M3eSnackbar } from '@m3e/web/snackbar';
 import { nextTick, onMounted, ref, toRaw, useTemplateRef } from 'vue';
 
-const vectorFile = ref<VectorFile | null>(null);
+const vectorFile = ref<Mvct | null>(null);
 const vectorNameInput = useTemplateRef<HTMLInputElement>('vectorNameInput');
 
 async function updateName() {
@@ -20,8 +22,9 @@ async function updateVector() {
 
 	try {
 		const cleanData = { ...toRaw(vectorFile.value) };
-		await upsertVector(cleanData);
-		document.title = `${vectorFile.value.name} | Materialvect`;
+		await saveProjectToDisk(cleanData);
+		await upsertVector(cleanData.metadata);
+		document.title = `${cleanData.metadata.name} | Materialvect`;
 	} catch (e) {
 		console.error('Cloning failed:', e);
 	}
@@ -32,9 +35,16 @@ onMounted(async () => {
 	const id = url.pathname.split('/').filter(Boolean).at(-1);
 	if (!id) return;
 
-	vectorFile.value = await getVector(id);
+	try {
+		vectorFile.value = await fetchProjectFromDisk(id);
+	} catch (error) {
+		console.error('Error while fetching vector file:', error);
+		M3eSnackbar.open((error as Error).message, {
+			duration: 0.4,
+		});
+	}
 
-	document.title = `${vectorFile.value.name} | Materialvect`;
+	document.title = `${vectorFile.value?.metadata.name || 'Untitled Vector'} | Materialvect`;
 });
 </script>
 
@@ -44,7 +54,7 @@ onMounted(async () => {
 			<input
 				ref="vectorNameInput"
 				slot="title"
-				v-model="vectorFile.name"
+				v-model="vectorFile.metadata.name"
 				class="vector-name"
 				@change="updateName()"
 			/>

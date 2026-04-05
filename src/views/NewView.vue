@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { upsertVector } from '@/db';
-import type { VectorFile } from '@/interfaces/VectorFile';
+import type { Mvct } from '@/interfaces/Mvct';
+import type { VectorProperties } from '@/interfaces/VectorProperties';
 import router from '@/router';
+import { saveProjectToDisk } from '@/utils/filesys';
 import '@m3e/web/loading-indicator';
 import { onMounted } from 'vue';
 
@@ -9,9 +11,9 @@ onMounted(async () => {
 	const urlParams = new URLSearchParams(window.location.search);
 
 	const id = window.crypto.randomUUID();
-	const name = urlParams.get('name') || 'Untitled Vector';
-	const width = urlParams.get('width');
-	const height = urlParams.get('height');
+	const name = decodeURIComponent(urlParams.get('name') || 'Untitled%20Vector');
+	const width = decodeURIComponent(urlParams.get('width') || '500');
+	const height = decodeURIComponent(urlParams.get('height') || '500');
 	const created = Date.now();
 	const modified = Date.now();
 	const synced = false;
@@ -26,7 +28,7 @@ onMounted(async () => {
 	if (height && isNum(height)) vcHeight = Number(height);
 	else vcHeight = 500;
 
-	const vectorFile: VectorFile = {
+	const vectorProperties: VectorProperties = {
 		id,
 		name,
 		width: vcWidth,
@@ -34,12 +36,23 @@ onMounted(async () => {
 		created,
 		modified,
 		synced,
-		content: '',
 	};
 
-	await upsertVector(vectorFile);
+	const vectorFile: Mvct = {
+		metadata: vectorProperties,
+		svg: '',
+		css: '',
+		js: '',
+		assets: {
+			images: [],
+			fonts: [],
+		},
+	};
 
-	router.push({ name: 'editor', params: { id: vectorFile.id } });
+	await saveProjectToDisk(vectorFile);
+	await upsertVector(vectorProperties);
+
+	router.replace({ name: 'editor', params: { id: vectorProperties.id } });
 });
 </script>
 

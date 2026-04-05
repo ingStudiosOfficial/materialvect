@@ -23,7 +23,7 @@ function openVector() {
 	aspect-ratio: v-bind('props.width') / v-bind('props.height');
 	box-sizing: border-box;
 	width: auto;
-	height: 100%;
+	height: auto;
 	flex-shrink: 0;
 	--m3e-card-shape: 25px;
 	--m3e-filled-card-container-color: var(--md-sys-color-primary-container);

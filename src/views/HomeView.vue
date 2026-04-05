@@ -6,7 +6,7 @@ import '@m3e/web/icon';
 import { useTemplateRef } from 'vue';
 import HomeTemplates from '@/components/HomeTemplates.vue';
 import RecentVectors from '@/components/RecentVectors.vue';
-import router from '@/router';
+import { createNewVector } from '@/utils/vector';
 
 const hiddenUpload = useTemplateRef('hiddenUpload');
 </script>
@@ -28,7 +28,7 @@ const hiddenUpload = useTemplateRef('hiddenUpload');
 		</div>
 
 		<m3e-fab-menu id="create-menu">
-			<m3e-fab-menu-item @click="router.push('/new')">
+			<m3e-fab-menu-item @click="createNewVector()">
 				<m3e-icon slot="icon" name="add"></m3e-icon>
 				Create
 			</m3e-fab-menu-item>
@@ -55,6 +55,7 @@ const hiddenUpload = useTemplateRef('hiddenUpload');
 	position: fixed;
 	bottom: 25px;
 	right: 25px;
+	z-index: 1000;
 }
 
 .hidden-upload {

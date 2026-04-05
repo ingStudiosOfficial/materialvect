@@ -1,18 +1,36 @@
 import { getAllVectors } from '@/db';
-import type { VectorFile } from '@/interfaces/VectorFile';
+import type { Mvct } from '@/interfaces/Mvct';
 import type { VectorProperties } from '@/interfaces/VectorProperties';
+import { fetchProjectsFromDisk, verifyFolderAccess } from '@/utils/filesys';
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
+import { M3eSnackbar } from '@m3e/web/snackbar';
 
 export const useVectors = defineStore('vectors', () => {
-	const vectors = ref<VectorFile[]>([]);
+	const vectors = ref<Mvct[]>([]);
 	const vectorsProperties = ref<VectorProperties[]>([]);
+	const canAccessFolder = ref<boolean>(false);
 
-	async function refreshVectors() {
+	async function refreshVectorProperties() {
 		const fetchedVectors = await getAllVectors();
-		vectors.value = fetchedVectors;
-		vectorsProperties.value = fetchedVectors.map(({ content: _content, ...v }) => v);
+		vectorsProperties.value = fetchedVectors;
 	}
 
-	return { vectors, vectorsProperties, refreshVectors };
+	async function refreshVectors() {
+		try {
+			vectors.value = await fetchProjectsFromDisk();
+			canAccessFolder.value = true;
+		} catch (error) {
+			console.error('Error while fetching vectors:', error);
+			M3eSnackbar.open((error as Error).message, {
+				duration: 0.4,
+			});
+		}
+	}
+
+	onMounted(async () => {
+		canAccessFolder.value = await verifyFolderAccess();
+	});
+
+	return { vectors, vectorsProperties, canAccessFolder, refreshVectors, refreshVectorProperties };
 });
