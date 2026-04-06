@@ -1,7 +1,7 @@
-import { getAllVectors } from '@/db';
+import { getAllVectors, deleteVector as deleteVectorFromDb } from '@/db';
 import type { Mvct } from '@/interfaces/Mvct';
 import type { VectorProperties } from '@/interfaces/VectorProperties';
-import { fetchProjectsFromDisk, verifyFolderAccess } from '@/utils/filesys';
+import { deleteProjectFromDisk, fetchProjectsFromDisk, verifyFolderAccess } from '@/utils/filesys';
 import { defineStore } from 'pinia';
 import { onMounted, ref } from 'vue';
 import { M3eSnackbar } from '@m3e/web/snackbar';
@@ -28,9 +28,23 @@ export const useVectors = defineStore('vectors', () => {
 		}
 	}
 
+	async function deleteVector(id: string) {
+		await deleteProjectFromDisk(id);
+		await deleteVectorFromDb(id);
+		await refreshVectors();
+		await refreshVectorProperties();
+	}
+
 	onMounted(async () => {
 		canAccessFolder.value = await verifyFolderAccess();
 	});
 
-	return { vectors, vectorsProperties, canAccessFolder, refreshVectors, refreshVectorProperties };
+	return {
+		vectors,
+		vectorsProperties,
+		canAccessFolder,
+		refreshVectors,
+		refreshVectorProperties,
+		deleteVector,
+	};
 });

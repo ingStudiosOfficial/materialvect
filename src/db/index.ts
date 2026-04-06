@@ -52,3 +52,8 @@ export async function getDirHandle(): Promise<FileSystemDirectoryHandle | null> 
 	const db = await getDb();
 	return await db.get('handle', 'root');
 }
+
+export async function deleteVector(id: string) {
+	const db = await getDb();
+	await db.delete('vectors', id);
+}

@@ -86,3 +86,28 @@ export async function saveProjectToDisk(vector: Mvct) {
 	await writable.write(mvctBlob);
 	await writable.close();
 }
+
+export async function verifyAccessAndFetch(id: string): Promise<Mvct> {
+	const canAccess = await verifyFolderAccess();
+
+	if (canAccess) {
+		return await fetchProjectFromDisk(id);
+	}
+
+	const projects = await selectProjectFolder();
+
+	const currentProject = projects.filter((p) => p.metadata.id === id)[0];
+
+	if (!currentProject) {
+		throw new Error('Failed to fetch project from disk');
+	}
+
+	return currentProject;
+}
+
+export async function deleteProjectFromDisk(id: string) {
+	const dirHandle = await getDirHandle();
+	if (!dirHandle) throw new Error('Directory handle missing');
+
+	await dirHandle.removeEntry(`${id}.mvct`);
+}
