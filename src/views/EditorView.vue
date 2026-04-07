@@ -8,6 +8,7 @@ import '@m3e/web/loading-indicator';
 import { M3eSnackbar } from '@m3e/web/snackbar';
 import '@m3e/web/button';
 import { nextTick, onMounted, ref, toRaw, useTemplateRef } from 'vue';
+import EditorArea from '@/components/EditorArea.vue';
 
 const vectorId = ref<string>('');
 const vectorFile = ref<Mvct | null>(null);
@@ -79,9 +80,9 @@ onMounted(async () => {
 				@change="updateName()"
 			/>
 		</m3e-app-bar>
-		<div class="editor-area">
+		<div class="editor-components">
 			<div class="toolbar"></div>
-			<div class="svg-area"></div>
+			<EditorArea :vector="vectorFile" class="svg-area"></EditorArea>
 		</div>
 	</div>
 	<div v-else-if="vectorFile === null && needAccess === false" class="editor-loader">
@@ -116,16 +117,21 @@ onMounted(async () => {
 	flex-shrink: 0;
 }
 
-.editor-area {
+.editor-components {
 	flex-grow: 1;
 	display: grid;
 	grid-template-columns: 1fr 4fr;
-	grid-template-rows: 100%;
+	box-sizing: border-box;
 }
 
 .toolbar {
 	background-color: var(--md-sys-color-surface-container);
-	color: var(--md-sys-color-on-surface-container);
+	color: var(--md-sys-color-on-secondary-container);
+	border-radius: 0 25px 25px 0;
+}
+
+.svg-area {
+	height: 100%;
 }
 
 .vector-name {

@@ -6,7 +6,7 @@ import router from '@/router';
 import { saveProjectToDisk, verifyAccessAndCreate } from '@/utils/filesys';
 import '@m3e/web/loading-indicator';
 import { M3eSnackbar } from '@m3e/web/snackbar';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, toRaw } from 'vue';
 
 const needAccess = ref<boolean>(false);
 const projectToCreate = ref<Mvct | null>(null);
@@ -16,6 +16,8 @@ async function retryCreateProject() {
 
 	try {
 		await verifyAccessAndCreate(projectToCreate.value);
+		await upsertVector(toRaw(projectToCreate.value.metadata));
+		router.replace({ name: 'editor', params: { id: projectToCreate.value.metadata.id } });
 	} catch (error) {
 		M3eSnackbar.open((error as Error).message, {
 			duration: 0.4,
@@ -67,29 +69,30 @@ onMounted(async () => {
 
 	try {
 		await saveProjectToDisk(vectorFile);
+		await upsertVector(vectorProperties);
+		router.replace({ name: 'editor', params: { id: vectorProperties.id } });
 	} catch (error) {
 		if ((error as Error).name === 'NotAllowedError') {
 			needAccess.value = true;
+			projectToCreate.value = vectorFile;
 		} else {
 			M3eSnackbar.open((error as Error).message, {
 				duration: 0.4,
 			});
 		}
 	}
-
-	await upsertVector(vectorProperties);
-
-	router.replace({ name: 'editor', params: { id: vectorProperties.id } });
 });
 </script>
 
 <template>
 	<div class="new-wrapper">
-		<m3e-loading-indicator></m3e-loading-indicator>
-		<p v-if="needAccess === false">Creating your vector...</p>
-		<div v-else class="editor-loader">
+		<div v-if="needAccess === false" class="new-loader">
+			<m3e-loading-indicator></m3e-loading-indicator>
+			<p>Creating your vector...</p>
+		</div>
+		<div v-else class="new-loader">
 			<p class="access-prompt">
-				Materialvect needs you to allow us to access your file system to load your vector.
+				Materialvect needs you to allow us to access your file system to create your vector.
 			</p>
 			<m3e-button variant="filled" @click="retryCreateProject()">Allow</m3e-button>
 		</div>
@@ -98,6 +101,17 @@ onMounted(async () => {
 
 <style scoped>
 .new-wrapper {
+	width: 100svw;
+	height: 100svh;
+	overflow-y: scroll;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+}
+
+.new-loader {
 	width: 100svw;
 	height: 100svh;
 	overflow-y: scroll;
