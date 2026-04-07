@@ -89,7 +89,9 @@ onMounted(async () => {
 		<p>Hang on while we load your vector...</p>
 	</div>
 	<div v-else-if="vectorFile === null && needAccess === true" class="editor-loader">
-		<p>Materialvect needs you to allow us to access your file system to load your vector.</p>
+		<p class="access-prompt">
+			Materialvect needs you to allow us to access your file system to load your vector.
+		</p>
 		<m3e-button variant="filled" @click="retryFetchProject()">Allow</m3e-button>
 	</div>
 </template>
@@ -144,5 +146,9 @@ onMounted(async () => {
 
 .vector-name:focus {
 	border: 2px solid var(--md-sys-color-primary);
+}
+
+.access-prompt {
+	text-align: center;
 }
 </style>

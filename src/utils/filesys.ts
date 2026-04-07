@@ -111,3 +111,16 @@ export async function deleteProjectFromDisk(id: string) {
 
 	await dirHandle.removeEntry(`${id}.mvct`);
 }
+
+export async function verifyAccessAndCreate(vector: Mvct) {
+	const canAccess = await verifyFolderAccess();
+
+	if (canAccess) {
+		await saveProjectToDisk(vector);
+		return;
+	}
+
+	await selectProjectFolder();
+
+	await saveProjectToDisk(vector);
+}

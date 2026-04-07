@@ -3,9 +3,25 @@ import { upsertVector } from '@/db';
 import type { Mvct } from '@/interfaces/Mvct';
 import type { VectorProperties } from '@/interfaces/VectorProperties';
 import router from '@/router';
-import { saveProjectToDisk } from '@/utils/filesys';
+import { saveProjectToDisk, verifyAccessAndCreate } from '@/utils/filesys';
 import '@m3e/web/loading-indicator';
-import { onMounted } from 'vue';
+import { M3eSnackbar } from '@m3e/web/snackbar';
+import { onMounted, ref } from 'vue';
+
+const needAccess = ref<boolean>(false);
+const projectToCreate = ref<Mvct | null>(null);
+
+async function retryCreateProject() {
+	if (!projectToCreate.value) return;
+
+	try {
+		await verifyAccessAndCreate(projectToCreate.value);
+	} catch (error) {
+		M3eSnackbar.open((error as Error).message, {
+			duration: 0.4,
+		});
+	}
+}
 
 onMounted(async () => {
 	const urlParams = new URLSearchParams(window.location.search);
@@ -49,7 +65,18 @@ onMounted(async () => {
 		},
 	};
 
-	await saveProjectToDisk(vectorFile);
+	try {
+		await saveProjectToDisk(vectorFile);
+	} catch (error) {
+		if ((error as Error).name === 'NotAllowedError') {
+			needAccess.value = true;
+		} else {
+			M3eSnackbar.open((error as Error).message, {
+				duration: 0.4,
+			});
+		}
+	}
+
 	await upsertVector(vectorProperties);
 
 	router.replace({ name: 'editor', params: { id: vectorProperties.id } });
@@ -59,7 +86,13 @@ onMounted(async () => {
 <template>
 	<div class="new-wrapper">
 		<m3e-loading-indicator></m3e-loading-indicator>
-		<p>Creating your vector...</p>
+		<p v-if="needAccess === false">Creating your vector...</p>
+		<div v-else class="editor-loader">
+			<p class="access-prompt">
+				Materialvect needs you to allow us to access your file system to load your vector.
+			</p>
+			<m3e-button variant="filled" @click="retryCreateProject()">Allow</m3e-button>
+		</div>
 	</div>
 </template>
 
@@ -73,5 +106,9 @@ onMounted(async () => {
 	align-items: center;
 	justify-content: center;
 	box-sizing: border-box;
+}
+
+.access-prompt {
+	text-align: center;
 }
 </style>
