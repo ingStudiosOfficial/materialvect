@@ -13,15 +13,36 @@ const vector = reactive<Mvct>(window.structuredClone(toRaw(props.vector)));
 function registerElements(elements: List<Element>) {
 	for (const element of elements) {
 		const elementId = element.attr('mvect-id');
-		const elementSelectClass = element.classes().includes('mvect-select');
 
 		if (!elementId) {
 			element.attr('mvect-id', window.crypto.randomUUID());
 		}
 
-		if (!elementSelectClass) {
-			element.addClass('mvect-select');
-		}
+		element.attr({
+			cursor: 'pointer',
+		});
+
+		element.on('focus', (event) => {
+			event.stopPropagation();
+
+			console.log('Element gained focus:', event.target);
+
+			element.attr({ 'mvect-select-stroke': true });
+
+			element.stroke({
+				color: 'var(--md-sys-color-primary)',
+				width: 2,
+				linecap: 'round',
+			});
+		});
+
+		element.on('focusout', (event) => {
+			console.log('Element lost focus:', event.target);
+
+			element.attr('mvect-select-stroke', null);
+
+			element.stroke();
+		});
 	}
 }
 
@@ -61,13 +82,5 @@ onMounted(() => {
 	background-color: #ffffff;
 	box-sizing: border-box;
 	box-shadow: 0 0 10px 5px rgba(0, 0, 0, 0.1);
-}
-
-.mvect-select:hover {
-	stroke: var(--md-sys-color-primary);
-	stroke-width: 2px;
-	vector-effect: non-scaling-stroke;
-	cursor: pointer;
-	pointer-events: all;
 }
 </style>
