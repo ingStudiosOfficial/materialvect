@@ -2,6 +2,8 @@
 import type { Mvct } from '@/interfaces/Mvct';
 import { Element as SvgElement, List, Svg, SVG } from '@svgdotjs/svg.js';
 import { onMounted, reactive, ref, toRaw } from 'vue';
+import type { MvctElement } from '@/interfaces/MvctElement';
+import { useInspector } from '@/stores/inspector';
 
 interface ComponentProps {
 	vector: Mvct;
@@ -11,13 +13,11 @@ interface ComponentEmits {
 	(e: 'change', vector: Mvct): void;
 }
 
-interface MvctElement extends SvgElement {
-	originalCursorState: string;
-}
-
 const props = defineProps<ComponentProps>();
 
 const emit = defineEmits<ComponentEmits>();
+
+const inspectorStore = useInspector();
 
 const vector = reactive<Mvct>(window.structuredClone(toRaw(props.vector)));
 const svgCanvas = ref<Svg | null>(null);
@@ -51,12 +51,25 @@ function registerElements(elements: List<SvgElement>) {
 			console.log('Element gained focus:', event.target);
 
 			mvctElement.addClass('mvct-focus');
+
+			inspectorStore.setActiveElement(mvctElement);
 		});
 
-		mvctElement.on('focusout', (event) => {
+		mvctElement.on('focusout', (e) => {
+			const event = e as FocusEvent;
+
+			console.log('Event related target:', event.relatedTarget);
+			console.log('Event target:', event.target);
+
+			if (inspectorStore.inspectorRef?.contains(event.relatedTarget as Node)) {
+				return;
+			}
+
 			console.log('Element lost focus:', event.target);
 
 			mvctElement.removeClass('mvct-focus');
+
+			inspectorStore.removeActiveElement(mvctElement);
 		});
 
 		mvctElement.on('pointerdown', (event) => {
@@ -140,7 +153,7 @@ onMounted(() => {
 
 <template>
 	<div class="editor-area">
-		<div class="svg-wrapper"></div>
+		<div class="svg-wrapper" tabindex="0"></div>
 	</div>
 </template>
 
