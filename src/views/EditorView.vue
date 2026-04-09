@@ -9,6 +9,7 @@ import { M3eSnackbar } from '@m3e/web/snackbar';
 import '@m3e/web/button';
 import { nextTick, onMounted, ref, toRaw, useTemplateRef } from 'vue';
 import EditorArea from '@/components/EditorArea.vue';
+import ElementInspector from '@/components/ElementInspector.vue';
 
 const vectorId = ref<string>('');
 const vectorFile = ref<Mvct | null>(null);
@@ -21,10 +22,17 @@ async function updateName() {
 	vectorNameInput.value?.blur();
 }
 
+async function updateVectorFromEditorArea(vector: Mvct) {
+	console.log('Saving vector:', vector);
+	vectorFile.value = vector;
+	updateVector();
+}
+
 async function updateVector() {
 	if (!vectorFile.value) return;
 
 	try {
+		vectorFile.value.metadata.modified = Date.now();
 		const cleanData = { ...toRaw(vectorFile.value) };
 		await saveProjectToDisk(cleanData);
 		await upsertVector(cleanData.metadata);
@@ -81,8 +89,12 @@ onMounted(async () => {
 			/>
 		</m3e-app-bar>
 		<div class="editor-components">
-			<div class="toolbar"></div>
-			<EditorArea :vector="vectorFile" class="svg-area"></EditorArea>
+			<ElementInspector class="toolbar"></ElementInspector>
+			<EditorArea
+				:vector="vectorFile"
+				class="svg-area"
+				@change="updateVectorFromEditorArea"
+			></EditorArea>
 		</div>
 	</div>
 	<div v-else-if="vectorFile === null && needAccess === false" class="editor-loader">
@@ -125,9 +137,7 @@ onMounted(async () => {
 }
 
 .toolbar {
-	background-color: var(--md-sys-color-surface-container);
-	color: var(--md-sys-color-on-secondary-container);
-	border-radius: 0 25px 25px 0;
+	height: 100%;
 }
 
 .svg-area {

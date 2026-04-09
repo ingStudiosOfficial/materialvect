@@ -1,62 +1,70 @@
 <script setup lang="ts">
 import type { Mvct } from '@/interfaces/Mvct';
-import { Element, List, Svg, SVG, type StrokeData } from '@svgdotjs/svg.js';
+import { Element as SvgElement, List, Svg, SVG } from '@svgdotjs/svg.js';
 import { onMounted, reactive, ref, toRaw } from 'vue';
 
 interface ComponentProps {
 	vector: Mvct;
 }
 
+interface ComponentEmits {
+	(e: 'change', vector: Mvct): void;
+}
+
+interface MvctElement extends SvgElement {
+	originalCursorState: string;
+}
+
 const props = defineProps<ComponentProps>();
+
+const emit = defineEmits<ComponentEmits>();
+
 const vector = reactive<Mvct>(window.structuredClone(toRaw(props.vector)));
 const svgCanvas = ref<Svg | null>(null);
-const draggedElement = ref<Element | null>(null);
+const draggedElement = ref<SvgElement | null>(null);
+const allElements = reactive<MvctElement[]>([]);
 
 let isDragging = false;
 let startPoint = { x: 0, y: 0 };
 let initialElementPos = { x: 0, y: 0 };
 
-function registerElements(elements: List<Element>) {
+function registerElements(elements: List<SvgElement>) {
 	for (const element of elements) {
 		const elementId = element.attr('mvect-id');
-		const originalStrokeStyles: StrokeData = {
-			color: element.attr('stroke'),
-			width: element.attr('stroke-width'),
-			linecap: element.attr('linecap'),
-		};
-
 		if (!elementId) {
 			element.attr('mvect-id', window.crypto.randomUUID());
 		}
 
-		element.attr({
+		const mvctElement = element as MvctElement;
+		mvctElement.originalCursorState = element.attr('cursor');
+
+		allElements.push(mvctElement);
+
+		mvctElement.attr({
 			cursor: 'pointer',
+			tabindex: 0,
 		});
 
-		element.on('focus', (event) => {
+		mvctElement.on('focus', (event) => {
 			event.stopPropagation();
 
 			console.log('Element gained focus:', event.target);
 
-			element.stroke({
-				color: 'var(--md-sys-color-primary)',
-				width: 2,
-				linecap: 'round',
-			});
+			mvctElement.addClass('mvct-focus');
 		});
 
-		element.on('focusout', (event) => {
+		mvctElement.on('focusout', (event) => {
 			console.log('Element lost focus:', event.target);
 
-			element.stroke(originalStrokeStyles);
+			mvctElement.removeClass('mvct-focus');
 		});
 
-		element.on('pointerdown', (event) => {
+		mvctElement.on('pointerdown', (event) => {
 			if (svgCanvas.value === null) return;
 
 			const mouseEvent = event as MouseEvent;
 
-			draggedElement.value = element;
+			draggedElement.value = mvctElement;
 
 			console.log('Pointerdown on:', mouseEvent.target);
 
@@ -67,8 +75,8 @@ function registerElements(elements: List<Element>) {
 			startPoint = { x: pt.x, y: pt.y };
 
 			initialElementPos = {
-				x: element.x() as number,
-				y: element.y() as number,
+				x: mvctElement.x() as number,
+				y: mvctElement.y() as number,
 			};
 
 			window.addEventListener('pointermove', handleGlobalMove);
@@ -94,8 +102,26 @@ function handleGlobalUp() {
 	isDragging = false;
 	startPoint = { x: 0, y: 0 };
 	initialElementPos = { x: 0, y: 0 };
-	window.removeEventListener('mousemove', handleGlobalMove);
-	window.removeEventListener('mouseup', handleGlobalUp);
+
+	emitVectorData();
+
+	window.removeEventListener('pointermove', handleGlobalMove);
+	window.removeEventListener('pointerup', handleGlobalUp);
+}
+
+function emitVectorData() {
+	if (!svgCanvas.value) return;
+
+	const svgCanvasToSave = svgCanvas.value.clone(true);
+
+	svgCanvasToSave.find('.mvct-focus').forEach((el) => {
+		el.removeClass('mvct-focus');
+	});
+
+	const newMvct = window.structuredClone(toRaw(vector));
+	newMvct.svg = svgCanvasToSave.svg();
+
+	emit('change', newMvct);
 }
 
 onMounted(() => {
@@ -106,9 +132,9 @@ onMounted(() => {
 
 	svgVector.svg(vector.svg);
 
-	const allElements = svgVector.find('*');
+	const foundElements = svgVector.find('*');
 
-	registerElements(allElements);
+	registerElements(foundElements);
 });
 </script>
 
@@ -140,5 +166,11 @@ onMounted(() => {
 
 .svg-wrapper :deep(*) {
 	outline: none;
+}
+
+.svg-wrapper:deep(.mvct-focus) {
+	stroke: var(--md-sys-color-primary) !important;
+	stroke-width: 2px !important;
+	vector-effect: non-scaling-stroke;
 }
 </style>
