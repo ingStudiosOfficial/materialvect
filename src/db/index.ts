@@ -5,8 +5,6 @@ async function getDb(): Promise<IDBPDatabase<unknown>> {
 	const dbName = import.meta.env.VITE_IDB_NAME;
 	const dbVer = Number(import.meta.env.VITE_IDB_VER);
 
-	console.log(dbName, dbVer);
-
 	const db = await openDB(dbName, dbVer, {
 		upgrade(db, oldVersion) {
 			switch (oldVersion) {

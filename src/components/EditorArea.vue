@@ -45,37 +45,18 @@ function registerElements(elements: List<SvgElement>) {
 			tabindex: 0,
 		});
 
-		mvctElement.on('focus', (event) => {
-			event.stopPropagation();
-
-			console.log('Element gained focus:', event.target);
-
-			mvctElement.addClass('mvct-focus');
-
-			inspectorStore.setActiveElement(mvctElement);
-		});
-
-		mvctElement.on('focusout', (e) => {
-			const event = e as FocusEvent;
-
-			console.log('Event related target:', event.relatedTarget);
-			console.log('Event target:', event.target);
-
-			if (inspectorStore.inspectorRef?.contains(event.relatedTarget as Node)) {
-				return;
-			}
-
-			console.log('Element lost focus:', event.target);
-
-			mvctElement.removeClass('mvct-focus');
-
-			inspectorStore.removeActiveElement(mvctElement);
-		});
-
 		mvctElement.on('pointerdown', (event) => {
 			if (svgCanvas.value === null) return;
 
 			const mouseEvent = event as MouseEvent;
+			mouseEvent.stopPropagation();
+
+			inspectorStore.setActiveElement(mvctElement);
+
+			allElements.forEach((element) => {
+				element.removeClass('mvct-focus');
+			});
+			mvctElement.addClass('mvct-focus');
 
 			draggedElement.value = mvctElement;
 
@@ -107,6 +88,8 @@ function handleGlobalMove(event: MouseEvent) {
 	const deltaY = pt.y - startPoint.y;
 
 	draggedElement.value.move(initialElementPos.x + deltaX, initialElementPos.y + deltaY);
+
+	inspectorStore.updateCurrentProperties();
 }
 
 function handleGlobalUp() {
@@ -116,14 +99,12 @@ function handleGlobalUp() {
 	startPoint = { x: 0, y: 0 };
 	initialElementPos = { x: 0, y: 0 };
 
-	emitVectorData();
-
 	window.removeEventListener('pointermove', handleGlobalMove);
 	window.removeEventListener('pointerup', handleGlobalUp);
 }
 
 function emitVectorData() {
-	if (!svgCanvas.value) return;
+	if (!svgCanvas.value || isDragging) return;
 
 	const svgCanvasToSave = svgCanvas.value.clone(true);
 
@@ -132,7 +113,7 @@ function emitVectorData() {
 	});
 
 	const newMvct = window.structuredClone(toRaw(vector));
-	newMvct.svg = svgCanvasToSave.svg();
+	newMvct.svg = svgCanvasToSave.node.innerHTML;
 
 	emit('change', newMvct);
 }
@@ -141,6 +122,15 @@ onMounted(() => {
 	const svgVector = SVG().addTo('.svg-wrapper').size('100%', '100%');
 	svgVector.viewbox(0, 0, props.vector.metadata.width, props.vector.metadata.height);
 
+	svgVector.on('pointerdown', (event) => {
+		if (event.target === svgVector.node) {
+			allElements.forEach((element) => {
+				element.removeClass('mvct-focus');
+			});
+			inspectorStore.clearActiveElement();
+		}
+	});
+
 	svgCanvas.value = svgVector;
 
 	svgVector.svg(vector.svg);
@@ -148,6 +138,8 @@ onMounted(() => {
 	const foundElements = svgVector.find('*');
 
 	registerElements(foundElements);
+
+	inspectorStore.saveFunction = emitVectorData;
 });
 </script>
 
