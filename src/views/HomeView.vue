@@ -3,18 +3,23 @@ import '@m3e/web/app-bar';
 import '@m3e/web/fab';
 import '@m3e/web/fab-menu';
 import '@m3e/web/icon';
-import { useTemplateRef } from 'vue';
+import '@m3e/web/chips';
+import { ref, useTemplateRef } from 'vue';
 import HomeTemplates from '@/components/HomeTemplates.vue';
 import RecentVectors from '@/components/RecentVectors.vue';
 import { createNewVector } from '@/utils/vector';
 
 const hiddenUpload = useTemplateRef('hiddenUpload');
+const isBeta = ref<boolean>(import.meta.env.VITE_IS_BETA === 'true');
 </script>
 
 <template>
 	<div class="home-wrapper">
 		<m3e-app-bar class="app-bar">
-			<span slot="title" style="margin-left: 20px">Materialvect</span>
+			<div slot="title" class="app-bar-title">
+				<span style="margin-left: 20px">Materialvect</span>
+				<m3e-chip v-if="isBeta" style="--m3e-chip-container-shape: 25px">BETA</m3e-chip>
+			</div>
 		</m3e-app-bar>
 		<m3e-fab size="large" class="create-fab">
 			<m3e-fab-menu-trigger for="create-menu">
@@ -80,5 +85,13 @@ const hiddenUpload = useTemplateRef('hiddenUpload');
 
 .recent-vectors {
 	height: 100%;
+}
+
+.app-bar-title {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 10px;
 }
 </style>
