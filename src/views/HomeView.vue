@@ -4,13 +4,53 @@ import '@m3e/web/fab';
 import '@m3e/web/fab-menu';
 import '@m3e/web/icon';
 import '@m3e/web/chips';
+import '@m3e/web/dialog';
+import '@m3e/web/button';
 import { ref, useTemplateRef } from 'vue';
 import HomeTemplates from '@/components/HomeTemplates.vue';
 import RecentVectors from '@/components/RecentVectors.vue';
 import { createNewVector } from '@/utils/vector';
+import { saveProjectToDisk, selectProjectFolder } from '@/utils/filesys';
+import { mvctToObject } from '@/utils/mvct';
+import { useVectors } from '@/stores/vectors';
+import { upsertVector } from '@/db';
+import type { M3eDialogElement } from '@m3e/web/dialog';
 
-const hiddenUpload = useTemplateRef('hiddenUpload');
+const vectorsStore = useVectors();
+
+const hiddenUpload = useTemplateRef<HTMLInputElement>('hiddenUpload');
 const isBeta = ref<boolean>(import.meta.env.VITE_IS_BETA === 'true');
+const permissionDialog = useTemplateRef<M3eDialogElement>('permissionDialog');
+
+let needsDirectory = false;
+
+async function onVectorUpload() {
+	if (needsDirectory) permissionDialog.value?.hide();
+
+	const files = hiddenUpload.value?.files;
+
+	if (!files || files.length === 0 || !files[0]) return;
+
+	const file = files[0];
+
+	try {
+		const mvctObject = await mvctToObject(file);
+		if (needsDirectory) await selectProjectFolder();
+		await saveProjectToDisk(mvctObject);
+		await upsertVector(mvctObject.metadata);
+		await vectorsStore.refreshVectors();
+		await vectorsStore.refreshVectorProperties();
+	} catch (error) {
+		if ((error as Error).message === 'Directory handle missing') {
+			needsDirectory = true;
+			permissionDialog.value?.show();
+		} else {
+			M3eSnackbar.open((error as Error).message, {
+				duration: 0.4,
+			});
+		}
+	}
+}
 </script>
 
 <template>
@@ -32,6 +72,14 @@ const isBeta = ref<boolean>(import.meta.env.VITE_IS_BETA === 'true');
 			<RecentVectors class="recent-vectors"></RecentVectors>
 		</div>
 
+		<m3e-dialog dismissible ref="permissionDialog">
+			<span slot="header">File system access denied</span>
+			Materialvect needs you to select a directory to store your vector.
+			<div slot="actions" end>
+				<m3e-button variant="filled" autofocus @click="onVectorUpload()">Select</m3e-button>
+			</div>
+		</m3e-dialog>
+
 		<m3e-fab-menu id="create-menu">
 			<m3e-fab-menu-item @click="createNewVector()">
 				<m3e-icon slot="icon" name="add"></m3e-icon>
@@ -42,7 +90,13 @@ const isBeta = ref<boolean>(import.meta.env.VITE_IS_BETA === 'true');
 				Upload
 			</m3e-fab-menu-item>
 		</m3e-fab-menu>
-		<input ref="hiddenUpload" class="hidden-upload" type="file" accept=".mvct" />
+		<input
+			ref="hiddenUpload"
+			class="hidden-upload"
+			type="file"
+			accept=".mvct"
+			@input="onVectorUpload()"
+		/>
 	</div>
 </template>
 
