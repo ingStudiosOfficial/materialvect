@@ -1,7 +1,7 @@
-export type ActiveElementType = 'rect' | 'circle' | 'ellipse';
+import type { MvctShape } from './Shape';
 
 export interface ActiveElementProperties {
-	type: ActiveElementType;
+	type: MvctShape;
 	x: number;
 	y: number;
 	width: number;

@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import type { Mvct } from '@/interfaces/Mvct';
-import { Element as SvgElement, List, Svg, SVG } from '@svgdotjs/svg.js';
-import { onMounted, reactive, ref, toRaw } from 'vue';
-import type { MvctElement } from '@/interfaces/MvctElement';
-import { useInspector } from '@/stores/inspector';
+import { onMounted, toRaw } from 'vue';
+import { useEditor } from '@/stores/editor';
+import type { Svg } from '@svgdotjs/svg.js';
 
 interface ComponentProps {
 	vector: Mvct;
@@ -17,129 +16,26 @@ const props = defineProps<ComponentProps>();
 
 const emit = defineEmits<ComponentEmits>();
 
-const inspectorStore = useInspector();
-
-const vector = reactive<Mvct>(window.structuredClone(toRaw(props.vector)));
-const svgCanvas = ref<Svg | null>(null);
-const draggedElement = ref<SvgElement | null>(null);
-const allElements = reactive<MvctElement[]>([]);
-
-let isDragging = false;
-let startPoint = { x: 0, y: 0 };
-let initialElementPos = { x: 0, y: 0 };
-
-function registerElements(elements: List<SvgElement>) {
-	for (const element of elements) {
-		const elementId = element.attr('mvect-id');
-		if (!elementId) {
-			element.attr('mvect-id', window.crypto.randomUUID());
-		}
-
-		const mvctElement = element as MvctElement;
-		mvctElement.originalCursorState = element.attr('cursor');
-
-		allElements.push(mvctElement);
-
-		mvctElement.attr({
-			cursor: 'pointer',
-			tabindex: 0,
-		});
-
-		mvctElement.on('pointerdown', (event) => {
-			if (svgCanvas.value === null) return;
-
-			const mouseEvent = event as MouseEvent;
-			mouseEvent.stopPropagation();
-
-			inspectorStore.setActiveElement(mvctElement);
-
-			allElements.forEach((element) => {
-				element.removeClass('mvct-focus');
-			});
-			mvctElement.addClass('mvct-focus');
-
-			draggedElement.value = mvctElement;
-
-			console.log('Pointerdown on:', mouseEvent.target);
-
-			mouseEvent.stopPropagation();
-			isDragging = true;
-
-			const pt = svgCanvas.value.point(mouseEvent.clientX, mouseEvent.clientY);
-			startPoint = { x: pt.x, y: pt.y };
-
-			initialElementPos = {
-				x: mvctElement.x() as number,
-				y: mvctElement.y() as number,
-			};
-
-			window.addEventListener('pointermove', handleGlobalMove);
-			window.addEventListener('pointerup', handleGlobalUp);
-		});
-	}
-}
-
-function handleGlobalMove(event: MouseEvent) {
-	if (!isDragging || !svgCanvas.value || !draggedElement.value) return;
-
-	const pt = svgCanvas.value.point(event.clientX, event.clientY);
-
-	const deltaX = pt.x - startPoint.x;
-	const deltaY = pt.y - startPoint.y;
-
-	draggedElement.value.move(initialElementPos.x + deltaX, initialElementPos.y + deltaY);
-
-	inspectorStore.updateCurrentProperties();
-}
-
-function handleGlobalUp() {
-	console.log('Handing element up:', draggedElement.value);
-
-	isDragging = false;
-	startPoint = { x: 0, y: 0 };
-	initialElementPos = { x: 0, y: 0 };
-
-	window.removeEventListener('pointermove', handleGlobalMove);
-	window.removeEventListener('pointerup', handleGlobalUp);
-}
+const inspectorStore = useEditor();
 
 function emitVectorData() {
-	if (!svgCanvas.value || isDragging) return;
+	if (!inspectorStore.svgCanvas || inspectorStore.isDragging) return;
 
-	const svgCanvasToSave = svgCanvas.value.clone(true);
+	const svgCanvasToSave = (inspectorStore.svgCanvas as Svg).clone(true);
 
 	svgCanvasToSave.find('.mvct-focus').forEach((el) => {
 		el.removeClass('mvct-focus');
 	});
 
-	const newMvct = window.structuredClone(toRaw(vector));
+	const newMvct = window.structuredClone(toRaw(inspectorStore.vector));
+	if (!newMvct) return;
 	newMvct.svg = svgCanvasToSave.node.innerHTML;
 
 	emit('change', newMvct);
 }
 
 onMounted(() => {
-	const svgVector = SVG().addTo('.svg-wrapper').size('100%', '100%');
-	svgVector.viewbox(0, 0, props.vector.metadata.width, props.vector.metadata.height);
-
-	svgVector.on('pointerdown', (event) => {
-		if (event.target === svgVector.node) {
-			allElements.forEach((element) => {
-				element.removeClass('mvct-focus');
-			});
-			inspectorStore.clearActiveElement();
-		}
-	});
-
-	svgCanvas.value = svgVector;
-
-	svgVector.svg(vector.svg);
-
-	const foundElements = svgVector.find('*');
-
-	registerElements(foundElements);
-
-	inspectorStore.saveFunction = emitVectorData;
+	inspectorStore.initialize(props.vector, emitVectorData);
 });
 </script>
 

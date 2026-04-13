@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { useInspector } from '@/stores/inspector';
+import { useEditor } from '@/stores/editor';
 import { storeToRefs } from 'pinia';
 
-const inspectorStore = useInspector();
+const inspectorStore = useEditor();
 const { activeElement, activeElementProperties } = storeToRefs(inspectorStore);
 </script>
 
 <template>
-	<div v-if="activeElement" class="inspector-wrapper" ref="inspector" tabindex="0">
+	<div v-if="activeElement" class="inspector-wrapper" tabindex="0">
 		<h4>Element Inspector</h4>
 		<p>X</p>
 		<input class="inspector-input" v-model.number="activeElementProperties.x" />
