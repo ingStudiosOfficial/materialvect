@@ -46,7 +46,7 @@ export const useEditor = defineStore('editor', () => {
 		activeElementProperties.x = Number(activeElement.value.x());
 		activeElementProperties.y = Number(activeElement.value.y());
 
-		if (activeElementProperties.type === 'rect') {
+		if (activeElementProperties.type === 'rect' || activeElementProperties.type === 'ellipse') {
 			activeElementProperties.width = Number(activeElement.value.width());
 			activeElementProperties.height = Number(activeElement.value.height());
 		} else if (activeElementProperties.type === 'circle') {
@@ -64,7 +64,7 @@ export const useEditor = defineStore('editor', () => {
 			activeElement.value.x(Number(newProperties.x));
 			activeElement.value.y(Number(newProperties.y));
 
-			if (newProperties.type === 'rect') {
+			if (newProperties.type === 'rect' || newProperties.type === 'ellipse') {
 				activeElement.value.width(Number(newProperties.width));
 				activeElement.value.height(Number(newProperties.height));
 			} else if (newProperties.type === 'circle') {
@@ -153,6 +153,21 @@ export const useEditor = defineStore('editor', () => {
 			window.addEventListener('pointermove', handleGlobalMove);
 			window.addEventListener('pointerup', handleGlobalUp);
 		});
+
+		mvctElement.on('keydown', (event) => {
+			const keyEvent = event as KeyboardEvent;
+			console.log('Keydown event:', keyEvent.key);
+
+			if (keyEvent.key === 'Delete' || keyEvent.key === 'Backspace') {
+				allElements.splice(
+					allElements.findIndex(
+						(element) => element.attr('mvect-id') === mvctElement.attr('mvect-id'),
+					),
+				);
+				mvctElement.remove();
+				saveFunction.value();
+			}
+		});
 	}
 
 	function registerElements(elements: List<SvgElement>) {
@@ -189,13 +204,29 @@ export const useEditor = defineStore('editor', () => {
 		if (!svgCanvas.value) return;
 
 		if (shape === 'rect') {
-			const rect = svgCanvas.value.rect(100, 100).attr({
+			const rect = svgCanvas.value.rect(100, 50).attr({
 				fill: 'var(--md-sys-color-primary-container)',
 				x: svgCanvas.value.bbox().width / 2,
 				y: svgCanvas.value.bbox().height / 2,
 			});
 
 			registerElement(rect);
+		} else if (shape === 'circle') {
+			const circle = svgCanvas.value.circle(100).attr({
+				fill: 'var(--md-sys-color-primary-container)',
+				cx: svgCanvas.value.bbox().width / 2,
+				cy: svgCanvas.value.bbox().height / 2,
+			});
+
+			registerElement(circle);
+		} else if (shape === 'ellipse') {
+			const ellipse = svgCanvas.value.ellipse(100, 50).attr({
+				fill: 'var(--md-sys-color-primary-container)',
+				cx: svgCanvas.value.bbox().width / 2,
+				cy: svgCanvas.value.bbox().height / 2,
+			});
+
+			registerElement(ellipse);
 		}
 	}
 

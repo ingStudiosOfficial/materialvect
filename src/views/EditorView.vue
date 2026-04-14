@@ -139,9 +139,15 @@ onMounted(async () => {
 					</m3e-menu-item>
 				</m3e-menu>
 				<m3e-menu id="insert-shape-menu">
-					<m3e-menu-item @click="editorStore.createShape('rect')"
-						>Rectangle</m3e-menu-item
-					>
+					<m3e-menu-item @click="editorStore.createShape('rect')">
+						Rectangle
+					</m3e-menu-item>
+					<m3e-menu-item @click="editorStore.createShape('circle')">
+						Circle
+					</m3e-menu-item>
+					<m3e-menu-item @click="editorStore.createShape('ellipse')">
+						Ellipse
+					</m3e-menu-item>
 				</m3e-menu>
 			</div>
 		</m3e-app-bar>

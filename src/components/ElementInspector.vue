@@ -14,7 +14,12 @@ const { activeElement, activeElementProperties } = storeToRefs(inspectorStore);
 		<p>Y</p>
 		<input class="inspector-input" v-model.number="activeElementProperties.y" />
 
-		<div v-if="activeElementProperties.type === 'rect'">
+		<div
+			v-if="
+				activeElementProperties.type === 'rect' ||
+				activeElementProperties.type === 'ellipse'
+			"
+		>
 			<p>Width</p>
 			<input class="inspector-input" v-model.number="activeElementProperties.width" />
 			<p>Height</p>
