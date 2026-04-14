@@ -1,14 +1,24 @@
 <script setup lang="ts">
 import { useEditor } from '@/stores/editor';
 import { storeToRefs } from 'pinia';
+import '@m3e/web/button';
+import '@m3e/web/button-group';
 
-const inspectorStore = useEditor();
-const { activeElement, activeElementProperties } = storeToRefs(inspectorStore);
+const editorStore = useEditor();
+const { activeElement, activeElementProperties } = storeToRefs(editorStore);
 </script>
 
 <template>
 	<div v-if="activeElement" class="inspector-wrapper" tabindex="0">
 		<h4>Element Inspector</h4>
+		<m3e-button-group variant="connected">
+			<m3e-button variant="outlined">Duplicate</m3e-button>
+			<m3e-button
+				variant="outlined"
+				@click="editorStore.deleteElement(editorStore.activeElement)"
+				>Delete</m3e-button
+			>
+		</m3e-button-group>
 		<p>X</p>
 		<input class="inspector-input" v-model.number="activeElementProperties.x" />
 		<p>Y</p>

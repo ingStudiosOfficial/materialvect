@@ -63,6 +63,11 @@ onMounted(() => {
 	background-color: #ffffff;
 	box-sizing: border-box;
 	box-shadow: 0 0 10px 5px rgba(0, 0, 0, 0.1);
+	touch-action: none;
+	user-select: none;
+	-webkit-user-select: none;
+	-webkit-touch-callout: none;
+	-webkit-tap-highlight-color: transparent;
 }
 
 .svg-wrapper :deep(*) {

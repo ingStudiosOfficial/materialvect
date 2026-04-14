@@ -43,6 +43,7 @@ async function updateVector() {
 		await saveProjectToDisk(cleanData);
 		await upsertVector(cleanData.metadata);
 		document.title = `${cleanData.metadata.name} | Materialvect`;
+		console.log('Successfully saved vector.');
 	} catch (e) {
 		console.error('Cloning failed:', e);
 	}

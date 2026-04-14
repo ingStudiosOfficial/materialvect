@@ -154,18 +154,12 @@ export const useEditor = defineStore('editor', () => {
 			window.addEventListener('pointerup', handleGlobalUp);
 		});
 
-		mvctElement.on('keydown', (event) => {
+		mvctElement.on('keydown', async (event) => {
 			const keyEvent = event as KeyboardEvent;
 			console.log('Keydown event:', keyEvent.key);
 
 			if (keyEvent.key === 'Delete' || keyEvent.key === 'Backspace') {
-				allElements.splice(
-					allElements.findIndex(
-						(element) => element.attr('mvect-id') === mvctElement.attr('mvect-id'),
-					),
-				);
-				mvctElement.remove();
-				saveFunction.value();
+				await deleteElement(mvctElement);
 			}
 		});
 	}
@@ -228,6 +222,20 @@ export const useEditor = defineStore('editor', () => {
 
 			registerElement(ellipse);
 		}
+
+		saveFunction.value();
+	}
+
+	async function deleteElement(mvctElement: MvctElement | null | undefined) {
+		if (!mvctElement) return;
+
+		allElements.splice(
+			allElements.findIndex(
+				(element) => element.attr('mvect-id') === mvctElement.attr('mvect-id'),
+			),
+		);
+		mvctElement.remove();
+		saveFunction.value();
 	}
 
 	return {
@@ -238,5 +246,6 @@ export const useEditor = defineStore('editor', () => {
 		activeElementProperties,
 		initialize,
 		createShape,
+		deleteElement,
 	};
 });
