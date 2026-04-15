@@ -138,6 +138,10 @@ onMounted(async () => {
 						<m3e-icon slot="icon" name="shapes"></m3e-icon>
 						<m3e-menu-trigger for="insert-shape-menu">Shape</m3e-menu-trigger>
 					</m3e-menu-item>
+					<m3e-menu-item @click="editorStore.createText()">
+						<m3e-icon slot="icon" name="text_fields"></m3e-icon>
+						Text
+					</m3e-menu-item>
 				</m3e-menu>
 				<m3e-menu id="insert-shape-menu">
 					<m3e-menu-item @click="editorStore.createShape('rect')">

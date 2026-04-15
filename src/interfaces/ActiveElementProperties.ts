@@ -1,7 +1,7 @@
-import type { MvctShape } from './Shape';
+import type { MvctElementType } from './ElementType';
 
 export interface ActiveElementProperties {
-	type: MvctShape;
+	type: MvctElementType;
 	x: number;
 	y: number;
 	width: number;

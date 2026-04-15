@@ -2,9 +2,9 @@ import { defineStore } from 'pinia';
 import { reactive, ref, watch } from 'vue';
 import type { MvctElement } from '@/interfaces/MvctElement';
 import type { ActiveElementProperties } from '@/interfaces/ActiveElementProperties';
-import { List, SVG, type Svg, type Element as SvgElement } from '@svgdotjs/svg.js';
+import { List, SVG, Text, type Svg, type Element as SvgElement } from '@svgdotjs/svg.js';
 import type { Mvct } from '@/interfaces/Mvct';
-import type { MvctShape } from '@/interfaces/Shape';
+import type { MvctElementType } from '@/interfaces/ElementType';
 
 export const useEditor = defineStore('editor', () => {
 	const activeElement = ref<MvctElement | null>(null);
@@ -22,6 +22,8 @@ export const useEditor = defineStore('editor', () => {
 	const svgCanvas = ref<Svg | null>(null);
 	const draggedElement = ref<SvgElement | null>(null);
 	const allElements = reactive<MvctElement[]>([]);
+	const textInputString = ref<string | null>(null);
+	const focusInputArea = ref<(() => void) | null>(null);
 
 	let isDragging = false;
 	let startPoint = { x: 0, y: 0 };
@@ -42,7 +44,7 @@ export const useEditor = defineStore('editor', () => {
 	function updateCurrentProperties() {
 		if (!activeElement.value) return;
 
-		activeElementProperties.type = activeElement.value.node.tagName as MvctShape;
+		activeElementProperties.type = activeElement.value.node.tagName as MvctElementType;
 		activeElementProperties.x = Number(activeElement.value.x());
 		activeElementProperties.y = Number(activeElement.value.y());
 
@@ -80,7 +82,17 @@ export const useEditor = defineStore('editor', () => {
 		{ deep: true },
 	);
 
-	function initialize(loadedVector: Mvct, save: () => void) {
+	watch(textInputString, (newText) => {
+		if (!activeElement.value) return;
+
+		console.log('Watched text:', newText);
+
+		if (activeElementProperties.type === 'text') {
+			(activeElement.value as unknown as Text).text(newText || '');
+		}
+	});
+
+	function initialize(loadedVector: Mvct, save: () => void, onInputFocus: () => void) {
 		vector.value = loadedVector;
 
 		const svgVector = SVG().addTo('.svg-wrapper').size('100%', '100%');
@@ -104,6 +116,7 @@ export const useEditor = defineStore('editor', () => {
 		registerElements(foundElements);
 
 		saveFunction.value = save;
+		focusInputArea.value = onInputFocus;
 	}
 
 	function registerElement(element: SvgElement) {
@@ -159,9 +172,18 @@ export const useEditor = defineStore('editor', () => {
 			console.log('Keydown event:', keyEvent.key);
 
 			if (keyEvent.key === 'Delete' || keyEvent.key === 'Backspace') {
-				await deleteElement(mvctElement);
+				deleteElement(mvctElement);
 			}
 		});
+
+		if (mvctElement.node.tagName === 'text') {
+			mvctElement.on('dblclick', () => {
+				if (!focusInputArea.value) return;
+
+				focusInputArea.value();
+				mvctElement.node.textContent = textInputString.value;
+			});
+		}
 	}
 
 	function registerElements(elements: List<SvgElement>) {
@@ -194,7 +216,7 @@ export const useEditor = defineStore('editor', () => {
 		window.removeEventListener('pointerup', handleGlobalUp);
 	}
 
-	function createShape(shape: MvctShape) {
+	function createShape(shape: MvctElementType) {
 		if (!svgCanvas.value) return;
 
 		if (shape === 'rect') {
@@ -226,7 +248,22 @@ export const useEditor = defineStore('editor', () => {
 		saveFunction.value();
 	}
 
-	async function deleteElement(mvctElement: MvctElement | null | undefined) {
+	function createText() {
+		if (!svgCanvas.value) return;
+
+		const text = svgCanvas.value.text('Text');
+		text.attr({
+			fill: 'var(--md-sys-color-primary-container)',
+			x: svgCanvas.value.bbox().width / 2,
+			y: svgCanvas.value.bbox().height / 2,
+		});
+
+		registerElement(text);
+
+		saveFunction.value();
+	}
+
+	function deleteElement(mvctElement: MvctElement | null | undefined) {
 		if (!mvctElement) return;
 
 		allElements.splice(
@@ -238,14 +275,31 @@ export const useEditor = defineStore('editor', () => {
 		saveFunction.value();
 	}
 
+	function duplicateElement(mvctElement: MvctElement | null | undefined) {
+		if (!mvctElement) return;
+
+		console.log('Duplicating element:', mvctElement);
+
+		const newElement = mvctElement.clone(true);
+		newElement.attr({
+			'mvect-id': window.crypto.randomUUID(),
+		});
+		console.log('New element:', newElement);
+
+		registerElement(newElement);
+	}
+
 	return {
 		svgCanvas,
 		isDragging,
 		vector,
 		activeElement,
 		activeElementProperties,
+		textInputString,
 		initialize,
 		createShape,
+		createText,
 		deleteElement,
+		duplicateElement,
 	};
 });
