@@ -46,6 +46,9 @@ const { activeElement, activeElementProperties } = storeToRefs(editorStore);
 
 		<p>Rotation</p>
 		<input class="inspector-input" v-model.number="activeElementProperties.rotation" />
+
+		<p>Color</p>
+		<input type="color" @input="editorStore.changeColor" />
 	</div>
 	<div v-else class="inspector-wrapper">
 		<p>No element selected.</p>
@@ -63,6 +66,8 @@ const { activeElement, activeElementProperties } = storeToRefs(editorStore);
 	flex-direction: column;
 	align-items: flex-start;
 	justify-content: flex-start;
+	height: 100%;
+	overflow: scroll;
 }
 
 .inspector-input {

@@ -23,6 +23,7 @@ export const useEditor = defineStore('editor', () => {
 	const draggedElement = ref<SvgElement | null>(null);
 	const allElements = reactive<MvctElement[]>([]);
 	const textInputString = ref<string | null>(null);
+	const openThemeFunction = ref<(() => void) | null>(null);
 
 	let isDragging = false;
 	let startPoint = { x: 0, y: 0 };
@@ -32,7 +33,18 @@ export const useEditor = defineStore('editor', () => {
 
 	function setActiveElement(element: MvctElement) {
 		console.log('Setting active element:', element);
-		activeElement.value = element;
+		if (element.node.tagName === 'tspan') {
+			console.log('Active element is tspan.');
+
+			const parent = element.parent();
+			if (!parent || parent.node.tagName !== 'text') {
+				console.error('No text parent for tspan found.');
+				return;
+			}
+
+			activeElement.value = parent as MvctElement;
+		} else activeElement.value = element;
+
 		updateCurrentProperties();
 	}
 
@@ -333,6 +345,21 @@ export const useEditor = defineStore('editor', () => {
 		registerElement(newElement);
 	}
 
+	function changeColor(event: InputEvent) {
+		if (!activeElement.value) return;
+
+		const color = (event.target as HTMLInputElement).value;
+
+		activeElement.value.fill(color);
+	}
+
+	function setCssTheme(css: string) {
+		if (!vector.value) return;
+
+		vector.value.css = css;
+		saveFunction.value();
+	}
+
 	return {
 		svgCanvas,
 		isDragging,
@@ -341,10 +368,13 @@ export const useEditor = defineStore('editor', () => {
 		activeElementProperties,
 		textInputString,
 		allElements,
+		openThemeFunction,
+		setCssTheme,
 		initialize,
 		createShape,
 		createText,
 		deleteElement,
 		duplicateElement,
+		changeColor,
 	};
 });

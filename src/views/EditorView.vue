@@ -14,6 +14,7 @@ import EditorArea from '@/components/EditorArea.vue';
 import ElementInspector from '@/components/ElementInspector.vue';
 import router from '@/router';
 import { useEditor } from '@/stores/editor';
+import ThemeDialog from '@/components/ThemeDialog.vue';
 
 const editorStore = useEditor();
 
@@ -72,6 +73,12 @@ async function retryFetchProject() {
 	}
 }
 
+function openThemeDialog() {
+	if (editorStore.openThemeFunction === null) return;
+
+	editorStore.openThemeFunction();
+}
+
 onMounted(async () => {
 	const url = new URL(window.location.href);
 	const id = url.pathname.split('/').filter(Boolean).at(-1);
@@ -121,6 +128,9 @@ onMounted(async () => {
 				<m3e-button variant="text">
 					<m3e-menu-trigger for="insert-menu">Insert</m3e-menu-trigger>
 				</m3e-button>
+				<m3e-button variant="text">
+					<m3e-menu-trigger for="theme-menu">Theme</m3e-menu-trigger>
+				</m3e-button>
 
 				<m3e-menu id="file-menu">
 					<m3e-menu-item @click="createNewVector()">
@@ -154,6 +164,13 @@ onMounted(async () => {
 						Ellipse
 					</m3e-menu-item>
 				</m3e-menu>
+
+				<m3e-menu id="theme-menu">
+					<m3e-menu-item @click="openThemeDialog()">
+						<m3e-icon slot="icon" name="colors"></m3e-icon>
+						Create theme
+					</m3e-menu-item>
+				</m3e-menu>
 			</div>
 		</m3e-app-bar>
 		<div class="editor-components">
@@ -164,6 +181,7 @@ onMounted(async () => {
 				@change="updateVectorFromEditorArea"
 			></EditorArea>
 		</div>
+		<ThemeDialog></ThemeDialog>
 	</div>
 	<div v-else-if="vectorFile === null && needAccess === false" class="editor-loader">
 		<m3e-loading-indicator></m3e-loading-indicator>
@@ -200,7 +218,7 @@ onMounted(async () => {
 .editor-components {
 	flex-grow: 1;
 	display: grid;
-	grid-template-columns: 1fr 4fr;
+	grid-template-columns: 20% 80%;
 	box-sizing: border-box;
 }
 
