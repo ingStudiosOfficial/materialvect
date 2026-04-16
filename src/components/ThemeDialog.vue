@@ -31,14 +31,16 @@ function generateThemeColor() {
 
 	const lightTheme = theme.schemes.light.toJSON();
 
-	let generatedCss = '';
+	let generatedCss = ':root {\n';
 
 	const toKebabCase = (str: string) => str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 
 	for (const [token, value] of Object.entries(lightTheme)) {
-		const lineToInsert = `mvct-${toKebabCase(token)}: ${hexFromArgb(value)};\n`;
+		const lineToInsert = `--mvct-${toKebabCase(token)}: ${hexFromArgb(value)};\n`;
 		generatedCss += lineToInsert;
 	}
+
+	generatedCss += '}';
 
 	console.log('Generated CSS:', generatedCss);
 
