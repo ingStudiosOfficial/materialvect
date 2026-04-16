@@ -23,7 +23,6 @@ export const useEditor = defineStore('editor', () => {
 	const draggedElement = ref<SvgElement | null>(null);
 	const allElements = reactive<MvctElement[]>([]);
 	const textInputString = ref<string | null>(null);
-	const focusInputArea = ref<(() => void) | null>(null);
 
 	let isDragging = false;
 	let startPoint = { x: 0, y: 0 };
@@ -92,7 +91,7 @@ export const useEditor = defineStore('editor', () => {
 		}
 	});
 
-	function initialize(loadedVector: Mvct, save: () => void, onInputFocus: () => void) {
+	function initialize(loadedVector: Mvct, save: () => void) {
 		vector.value = loadedVector;
 
 		const svgVector = SVG().addTo('.svg-wrapper').size('100%', '100%');
@@ -116,13 +115,12 @@ export const useEditor = defineStore('editor', () => {
 		registerElements(foundElements);
 
 		saveFunction.value = save;
-		focusInputArea.value = onInputFocus;
 	}
 
 	function registerElement(element: SvgElement) {
-		const elementId = element.attr('mvect-id');
+		const elementId = element.attr('mvct-id');
 		if (!elementId) {
-			element.attr('mvect-id', window.crypto.randomUUID());
+			element.attr('mvct-id', window.crypto.randomUUID());
 		}
 
 		const mvctElement = element as MvctElement;
@@ -178,10 +176,54 @@ export const useEditor = defineStore('editor', () => {
 
 		if (mvctElement.node.tagName === 'text') {
 			mvctElement.on('dblclick', () => {
-				if (!focusInputArea.value) return;
+				const textElement = mvctElement as unknown as Text;
 
-				focusInputArea.value();
-				mvctElement.node.textContent = textInputString.value;
+				const bbox = textElement.node.getBoundingClientRect();
+				const currentText = textElement.text();
+
+				textElement.hide();
+				mvctElement.isTextHidden = true;
+
+				const input = document.createElement('div');
+				input.contentEditable = 'true';
+				input.style.cssText = `
+                    position: absolute;
+                    left: ${bbox.left + window.scrollX}px;
+                    top: ${bbox.top + window.scrollY}px;
+                    min-width: ${bbox.width}px;
+                    font-family: ${textElement.attr('font-family') || 'inherit'};
+                    font-size: ${textElement.attr('font-size')};
+                    color: ${textElement.attr('fill')};
+                    background: transparent;
+                    outline: none;
+                    white-space: pre;
+                    z-index: 1000;
+                    transform: ${textElement.transform()};
+                `;
+				input.innerText = currentText;
+				document.body.appendChild(input);
+
+				input.focus();
+
+				const range = document.createRange();
+				range.selectNodeContents(input);
+				const sel = window.getSelection();
+				sel?.removeAllRanges();
+				sel?.addRange(range);
+
+				const saveChanges = () => {
+					const newText = input.innerText.trim();
+					textElement.text(newText).show();
+					input.remove();
+				};
+
+				input.onblur = saveChanges;
+				input.onkeydown = (event) => {
+					if (event.key === 'Enter' && !event.shiftKey) {
+						event.preventDefault();
+						input.blur();
+					}
+				};
 			});
 		}
 	}
@@ -256,6 +298,8 @@ export const useEditor = defineStore('editor', () => {
 			fill: 'var(--md-sys-color-primary-container)',
 			x: svgCanvas.value.bbox().width / 2,
 			y: svgCanvas.value.bbox().height / 2,
+			'font-family': 'var(--md-ref-typeface-plain)',
+			'font-size': '16px',
 		});
 
 		registerElement(text);
@@ -268,7 +312,7 @@ export const useEditor = defineStore('editor', () => {
 
 		allElements.splice(
 			allElements.findIndex(
-				(element) => element.attr('mvect-id') === mvctElement.attr('mvect-id'),
+				(element) => element.attr('mvct-id') === mvctElement.attr('mvct-id'),
 			),
 		);
 		mvctElement.remove();
@@ -282,7 +326,7 @@ export const useEditor = defineStore('editor', () => {
 
 		const newElement = mvctElement.clone(true);
 		newElement.attr({
-			'mvect-id': window.crypto.randomUUID(),
+			'mvct-id': window.crypto.randomUUID(),
 		});
 		console.log('New element:', newElement);
 
@@ -296,6 +340,7 @@ export const useEditor = defineStore('editor', () => {
 		activeElement,
 		activeElementProperties,
 		textInputString,
+		allElements,
 		initialize,
 		createShape,
 		createText,

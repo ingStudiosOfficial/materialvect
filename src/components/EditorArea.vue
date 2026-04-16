@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Mvct } from '@/interfaces/Mvct';
-import { onMounted, toRaw, useTemplateRef } from 'vue';
+import { onMounted, toRaw } from 'vue';
 import { useEditor } from '@/stores/editor';
 import type { Svg } from '@svgdotjs/svg.js';
 
@@ -18,8 +18,6 @@ const emit = defineEmits<ComponentEmits>();
 
 const inspectorStore = useEditor();
 
-const hiddenInputArea = useTemplateRef<HTMLInputElement>('hiddenInputArea');
-
 function emitVectorData() {
 	if (!inspectorStore.svgCanvas || inspectorStore.isDragging) return;
 
@@ -29,6 +27,14 @@ function emitVectorData() {
 		el.removeClass('mvct-focus');
 	});
 
+	for (const el of inspectorStore.allElements) {
+		const elementInCanvas = svgCanvasToSave.findOne(`[mvct-id="${el.attr('mvct-id')}"]`);
+
+		if (el.isTextHidden) {
+			elementInCanvas?.show();
+		}
+	}
+
 	const newMvct = window.structuredClone(toRaw(inspectorStore.vector));
 	if (!newMvct) return;
 	newMvct.svg = svgCanvasToSave.node.innerHTML;
@@ -36,27 +42,14 @@ function emitVectorData() {
 	emit('change', newMvct);
 }
 
-function onInputFocus() {
-	hiddenInputArea.value?.focus();
-}
-
-function setTextValue() {
-	if (!hiddenInputArea.value) return;
-
-	console.log('Setting text:', hiddenInputArea.value.value);
-
-	inspectorStore.textInputString = hiddenInputArea.value.value;
-}
-
 onMounted(() => {
-	inspectorStore.initialize(props.vector, emitVectorData, onInputFocus);
+	inspectorStore.initialize(props.vector, emitVectorData);
 });
 </script>
 
 <template>
 	<div class="editor-area">
 		<div class="svg-wrapper" tabindex="0"></div>
-		<input class="hidden-input-area" ref="hiddenInputArea" @input="setTextValue()" />
 	</div>
 </template>
 
@@ -93,9 +86,5 @@ onMounted(() => {
 	stroke: var(--md-sys-color-primary) !important;
 	stroke-width: 2px !important;
 	vector-effect: non-scaling-stroke;
-}
-
-.hidden-input-area {
-	display: none;
 }
 </style>
