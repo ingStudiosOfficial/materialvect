@@ -1,3 +1,4 @@
+import type { MvctTheme } from './Theme';
 import type { VectorProperties } from './VectorProperties';
 
 export interface Mvct {
@@ -5,6 +6,7 @@ export interface Mvct {
 	svg: string;
 	css: string;
 	js: string;
+	theme: MvctTheme;
 	assets: {
 		images: File[];
 		fonts: File[];

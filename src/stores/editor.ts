@@ -5,6 +5,7 @@ import type { ActiveElementProperties } from '@/interfaces/ActiveElementProperti
 import { List, SVG, Text, type Svg, type Element as SvgElement } from '@svgdotjs/svg.js';
 import type { Mvct } from '@/interfaces/Mvct';
 import type { MvctElementType } from '@/interfaces/ElementType';
+import type { MvctTheme } from '@/interfaces/Theme';
 
 export const useEditor = defineStore('editor', () => {
 	const activeElement = ref<MvctElement | null>(null);
@@ -121,6 +122,8 @@ export const useEditor = defineStore('editor', () => {
 		svgCanvas.value = svgVector;
 
 		svgVector.svg(vector.value.svg);
+		console.log('CSS:', vector.value.css);
+		svgVector.element('style').words(vector.value.css);
 
 		const foundElements = svgVector.find('*');
 
@@ -275,7 +278,7 @@ export const useEditor = defineStore('editor', () => {
 
 		if (shape === 'rect') {
 			const rect = svgCanvas.value.rect(100, 50).attr({
-				fill: 'var(--md-sys-color-primary-container)',
+				fill: 'var(--mvct-color-primary-container)',
 				x: svgCanvas.value.bbox().width / 2,
 				y: svgCanvas.value.bbox().height / 2,
 			});
@@ -283,7 +286,7 @@ export const useEditor = defineStore('editor', () => {
 			registerElement(rect);
 		} else if (shape === 'circle') {
 			const circle = svgCanvas.value.circle(100).attr({
-				fill: 'var(--md-sys-color-primary-container)',
+				fill: 'var(--mvct-color-primary-container)',
 				cx: svgCanvas.value.bbox().width / 2,
 				cy: svgCanvas.value.bbox().height / 2,
 			});
@@ -291,7 +294,7 @@ export const useEditor = defineStore('editor', () => {
 			registerElement(circle);
 		} else if (shape === 'ellipse') {
 			const ellipse = svgCanvas.value.ellipse(100, 50).attr({
-				fill: 'var(--md-sys-color-primary-container)',
+				fill: 'var(--mvct-color-primary-container)',
 				cx: svgCanvas.value.bbox().width / 2,
 				cy: svgCanvas.value.bbox().height / 2,
 			});
@@ -307,7 +310,7 @@ export const useEditor = defineStore('editor', () => {
 
 		const text = svgCanvas.value.text('Text');
 		text.attr({
-			fill: 'var(--md-sys-color-primary-container)',
+			fill: 'var(--mvct-color-primary-container)',
 			x: svgCanvas.value.bbox().width / 2,
 			y: svgCanvas.value.bbox().height / 2,
 			'font-family': 'var(--md-ref-typeface-plain)',
@@ -360,6 +363,13 @@ export const useEditor = defineStore('editor', () => {
 		saveFunction.value();
 	}
 
+	function setMvctTheme(theme: MvctTheme) {
+		if (!vector.value) return;
+
+		vector.value.theme = theme;
+		saveFunction.value();
+	}
+
 	return {
 		svgCanvas,
 		isDragging,
@@ -369,12 +379,14 @@ export const useEditor = defineStore('editor', () => {
 		textInputString,
 		allElements,
 		openThemeFunction,
-		setCssTheme,
+		saveFunction,
 		initialize,
 		createShape,
 		createText,
 		deleteElement,
 		duplicateElement,
 		changeColor,
+		setCssTheme,
+		setMvctTheme,
 	};
 });

@@ -4,8 +4,8 @@ import '@m3e/web/dialog';
 import { M3eDialogElement } from '@m3e/web/dialog';
 import { onMounted, ref, useTemplateRef } from 'vue';
 import '@m3e/web/button';
-import { argbFromHex, hexFromArgb, themeFromSourceColor } from '@material/material-color-utilities';
 import { M3eSnackbar } from '@m3e/web/snackbar';
+import { generateCss, generateTheme } from '@/utils/theme';
 
 const editorStore = useEditor();
 
@@ -25,26 +25,17 @@ function updateSeedColor(event: InputEvent) {
 }
 
 function generateThemeColor() {
-	const theme = themeFromSourceColor(argbFromHex(seedColor.value));
+	const lightTheme = generateTheme(seedColor.value);
 
-	console.log('Generated theme:', JSON.stringify(theme, null, 2));
+	editorStore.setMvctTheme(lightTheme);
 
-	const lightTheme = theme.schemes.light.toJSON();
-
-	let generatedCss = ':root {\n';
-
-	const toKebabCase = (str: string) => str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-
-	for (const [token, value] of Object.entries(lightTheme)) {
-		const lineToInsert = `    --mvct-${toKebabCase(token)}: ${hexFromArgb(value)};\n`;
-		generatedCss += lineToInsert;
-	}
-
-	generatedCss += '}';
+	const generatedCss = generateCss(lightTheme);
 
 	console.log('Generated CSS:', generatedCss);
 
 	editorStore.setCssTheme(generatedCss);
+
+	editorStore.saveFunction();
 
 	M3eSnackbar.open('Successfully generated theme', {
 		duration: 0.4,
@@ -57,12 +48,16 @@ onMounted(() => {
 </script>
 
 <template>
-	<m3e-dialog ref="themeDialog">
+	<m3e-dialog ref="themeDialog" dismissible>
 		<span slot="header">Edit Theme</span>
 		<div class="dialog-content">
 			<p class="theme-subheader">Seed Color</p>
 			<input type="color" :value="seedColor" @input="updateSeedColor" />
-			<m3e-button variant="filled" @click="generateThemeColor()">Generate</m3e-button>
+		</div>
+		<div slot="actions" end>
+			<m3e-button variant="filled" @click="generateThemeColor()"
+				><m3e-dialog-action>Generate</m3e-dialog-action></m3e-button
+			>
 		</div>
 	</m3e-dialog>
 </template>

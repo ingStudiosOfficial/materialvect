@@ -4,6 +4,7 @@ import type { Mvct } from '@/interfaces/Mvct';
 import type { VectorProperties } from '@/interfaces/VectorProperties';
 import router from '@/router';
 import { saveProjectToDisk, verifyAccessAndCreate } from '@/utils/filesys';
+import { generateCss, generateTheme } from '@/utils/theme';
 import '@m3e/web/loading-indicator';
 import { M3eSnackbar } from '@m3e/web/snackbar';
 import { onMounted, ref, toRaw } from 'vue';
@@ -56,11 +57,14 @@ onMounted(async () => {
 		synced,
 	};
 
+	const theme = generateTheme('#CBA9FF');
+
 	const vectorFile: Mvct = {
 		metadata: vectorProperties,
 		svg: '',
-		css: '',
+		css: generateCss(theme),
 		js: '',
+		theme: theme,
 		assets: {
 			images: [],
 			fonts: [],

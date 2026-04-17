@@ -79,6 +79,11 @@ function openThemeDialog() {
 	editorStore.openThemeFunction();
 }
 
+function navigateToHome() {
+	updateVector();
+	router.push('/');
+}
+
 onMounted(async () => {
 	const url = new URL(window.location.href);
 	const id = url.pathname.split('/').filter(Boolean).at(-1);
@@ -133,6 +138,10 @@ onMounted(async () => {
 				</m3e-button>
 
 				<m3e-menu id="file-menu">
+					<m3e-menu-item @click="navigateToHome()">
+						<m3e-icon slot="icon" name="home"></m3e-icon>
+						Home
+					</m3e-menu-item>
 					<m3e-menu-item @click="createNewVector()">
 						<m3e-icon slot="icon" name="add"></m3e-icon>
 						Create
@@ -168,7 +177,7 @@ onMounted(async () => {
 				<m3e-menu id="theme-menu">
 					<m3e-menu-item @click="openThemeDialog()">
 						<m3e-icon slot="icon" name="colors"></m3e-icon>
-						Create theme
+						Edit theme
 					</m3e-menu-item>
 				</m3e-menu>
 			</div>

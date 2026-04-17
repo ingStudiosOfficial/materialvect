@@ -1,4 +1,5 @@
 import type { Mvct } from '@/interfaces/Mvct';
+import type { MvctTheme } from '@/interfaces/Theme';
 import type { VectorProperties } from '@/interfaces/VectorProperties';
 import JSZip from 'jszip';
 
@@ -11,15 +12,17 @@ export async function mvctToObject(mvctFile: File): Promise<Mvct> {
 	const css = zip.file('style.css');
 	const js = zip.file('main.js');
 	const metadata = zip.file('metadata.json');
+	const theme = zip.file('theme.json');
 	const assets = zip.folder('assets');
 
-	if (!svg || !css || !js || !metadata || !assets)
+	if (!svg || !css || !js || !metadata || !theme || !assets)
 		throw new Error('File corrupted (contents missing)');
 
 	const svgContent = await svg.async('string');
 	const cssContent = await css.async('string');
 	const jsContent = await js.async('string');
 	const vectorProperties: VectorProperties = JSON.parse(await metadata.async('string'));
+	const themeContent: MvctTheme = JSON.parse(await theme.async('string'));
 
 	const images = assets.folder('images');
 	const fonts = assets.folder('fonts');
@@ -63,6 +66,7 @@ export async function mvctToObject(mvctFile: File): Promise<Mvct> {
 		svg: svgContent,
 		css: cssContent,
 		js: jsContent,
+		theme: themeContent,
 		assets: {
 			images: imageFiles,
 			fonts: fontFiles,
@@ -77,6 +81,7 @@ export async function objectToMvct(mvctObject: Mvct): Promise<Blob> {
 	zip.file('style.css', mvctObject.css);
 	zip.file('main.js', mvctObject.js);
 	zip.file('metadata.json', JSON.stringify(mvctObject.metadata));
+	zip.file('theme.json', JSON.stringify(mvctObject.theme));
 
 	const assets = zip.folder('assets');
 	const images = assets?.folder('images');
