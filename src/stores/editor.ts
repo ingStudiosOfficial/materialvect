@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { reactive, ref, watch } from 'vue';
 import type { MvctElement } from '@/interfaces/MvctElement';
 import type { ActiveElementProperties } from '@/interfaces/ActiveElementProperties';
-import { List, SVG, Text, type Svg, type Element as SvgElement } from '@svgdotjs/svg.js';
+import { List, Svg, SVG, Text, type Element as SvgElement } from '@svgdotjs/svg.js';
 import type { Mvct } from '@/interfaces/Mvct';
 import type { MvctElementType } from '@/interfaces/ElementType';
 import type { MvctTheme } from '@/interfaces/Theme';
@@ -25,6 +25,8 @@ export const useEditor = defineStore('editor', () => {
 	const allElements = reactive<MvctElement[]>([]);
 	const textInputString = ref<string | null>(null);
 	const openThemeFunction = ref<(() => void) | null>(null);
+	const styleBlock = ref<Svg | null>(null);
+	const openColorPickerFunction = ref<(() => void) | null>(null);
 
 	let isDragging = false;
 	let startPoint = { x: 0, y: 0 };
@@ -123,7 +125,15 @@ export const useEditor = defineStore('editor', () => {
 
 		svgVector.svg(vector.value.svg);
 		console.log('CSS:', vector.value.css);
-		svgVector.element('style').words(vector.value.css);
+
+		const existingStyleBlock = svgVector.findOne('#mvct-style');
+
+		if (!existingStyleBlock)
+			styleBlock.value = svgVector
+				.element('style')
+				.attr({ id: 'mvct-style' })
+				.words(vector.value.css);
+		else existingStyleBlock.words(vector.value.css);
 
 		const foundElements = svgVector.find('*');
 
@@ -348,10 +358,8 @@ export const useEditor = defineStore('editor', () => {
 		registerElement(newElement);
 	}
 
-	function changeColor(event: InputEvent) {
+	function changeColor(color: string) {
 		if (!activeElement.value) return;
-
-		const color = (event.target as HTMLInputElement).value;
 
 		activeElement.value.fill(color);
 	}
@@ -360,6 +368,7 @@ export const useEditor = defineStore('editor', () => {
 		if (!vector.value) return;
 
 		vector.value.css = css;
+		styleBlock.value?.words(css);
 		saveFunction.value();
 	}
 
@@ -380,6 +389,7 @@ export const useEditor = defineStore('editor', () => {
 		allElements,
 		openThemeFunction,
 		saveFunction,
+		openColorPickerFunction,
 		initialize,
 		createShape,
 		createText,

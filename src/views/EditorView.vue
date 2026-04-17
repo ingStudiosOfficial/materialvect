@@ -15,6 +15,7 @@ import ElementInspector from '@/components/ElementInspector.vue';
 import router from '@/router';
 import { useEditor } from '@/stores/editor';
 import ThemeDialog from '@/components/ThemeDialog.vue';
+import ColorPicker from '@/components/ColorPicker.vue';
 
 const editorStore = useEditor();
 
@@ -58,7 +59,7 @@ async function saveVector() {
 }
 
 async function createNewVector() {
-	await saveVector();
+	await updateVector();
 	router.push({ name: 'new' });
 }
 
@@ -191,6 +192,7 @@ onMounted(async () => {
 			></EditorArea>
 		</div>
 		<ThemeDialog></ThemeDialog>
+		<ColorPicker @input="editorStore.changeColor"></ColorPicker>
 	</div>
 	<div v-else-if="vectorFile === null && needAccess === false" class="editor-loader">
 		<m3e-loading-indicator></m3e-loading-indicator>

@@ -8,6 +8,8 @@ export async function mvctToObject(mvctFile: File): Promise<Mvct> {
 
 	if (!zip) throw new Error('File corrupted (failed to load zip)');
 
+	console.log('Zip:', zip);
+
 	const svg = zip.file('main.svg');
 	const css = zip.file('style.css');
 	const js = zip.file('main.js');
@@ -15,8 +17,10 @@ export async function mvctToObject(mvctFile: File): Promise<Mvct> {
 	const theme = zip.file('theme.json');
 	const assets = zip.folder('assets');
 
-	if (!svg || !css || !js || !metadata || !theme || !assets)
+	if (!svg || !css || !js || !metadata || !theme || !assets) {
+		console.error('Contents:', svg, css, js, metadata, theme, assets);
 		throw new Error('File corrupted (contents missing)');
+	}
 
 	const svgContent = await svg.async('string');
 	const cssContent = await css.async('string');

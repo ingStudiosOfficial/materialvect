@@ -6,6 +6,12 @@ import '@m3e/web/button-group';
 
 const editorStore = useEditor();
 const { activeElement, activeElementProperties } = storeToRefs(editorStore);
+
+function openColorPicker() {
+	if (!editorStore.openColorPickerFunction) return;
+
+	editorStore.openColorPickerFunction();
+}
 </script>
 
 <template>
@@ -33,13 +39,14 @@ const { activeElement, activeElementProperties } = storeToRefs(editorStore);
 				activeElementProperties.type === 'rect' ||
 				activeElementProperties.type === 'ellipse'
 			"
+			class="conditional-container"
 		>
 			<p>Width</p>
 			<input class="inspector-input" v-model.number="activeElementProperties.width" />
 			<p>Height</p>
 			<input class="inspector-input" v-model.number="activeElementProperties.height" />
 		</div>
-		<div v-else-if="activeElementProperties.type === 'circle'">
+		<div v-else-if="activeElementProperties.type === 'circle'" class="conditional-container">
 			<p>Radius</p>
 			<input class="inspector-input" v-model.number="activeElementProperties.radius" />
 		</div>
@@ -48,7 +55,8 @@ const { activeElement, activeElementProperties } = storeToRefs(editorStore);
 		<input class="inspector-input" v-model.number="activeElementProperties.rotation" />
 
 		<p>Color</p>
-		<input type="color" @input="editorStore.changeColor" />
+		<!--<input type="color" @input="editorStore.changeColor" />-->
+		<button class="color-picker-btn" @click="openColorPicker()">Choose color</button>
 	</div>
 	<div v-else class="inspector-wrapper">
 		<p>No element selected.</p>
@@ -79,5 +87,23 @@ const { activeElement, activeElementProperties } = storeToRefs(editorStore);
 	box-sizing: border-box;
 	padding: 10px;
 	border-radius: 10px;
+}
+
+.color-picker-btn {
+	width: 100%;
+	padding: 10px;
+	border-radius: 10px;
+	box-sizing: border-box;
+	background-color: var(--md-sys-color-surface-container-high);
+	color: transparent;
+	cursor: pointer;
+}
+
+.color-picker-btn:hover {
+	background-image: linear-gradient(rgba(0, 0, 0, 0.1) 0 0);
+}
+
+.conditional-container {
+	width: 100%;
 }
 </style>

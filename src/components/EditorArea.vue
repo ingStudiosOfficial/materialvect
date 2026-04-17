@@ -35,6 +35,8 @@ function emitVectorData() {
 		}
 	}
 
+	svgCanvasToSave.findOne('#mvct-style')?.remove();
+
 	const newMvct = window.structuredClone(toRaw(inspectorStore.vector));
 	if (!newMvct) return;
 	newMvct.svg = svgCanvasToSave.node.innerHTML;
