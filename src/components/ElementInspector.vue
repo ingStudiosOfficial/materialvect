@@ -59,8 +59,12 @@ function openColorPicker() {
 			<input class="inspector-input" v-model.number="activeElementProperties.rotation" />
 
 			<p>Color</p>
-			<!--<input type="color" @input="editorStore.changeColor" />-->
 			<button class="color-picker-btn" @click="openColorPicker()">Choose color</button>
+
+			<div v-if="activeElementProperties.type === 'text'" class="conditional-container">
+				<p>Font size</p>
+				<input class="inspector-input" v-model.number="activeElementProperties.fontSize" />
+			</div>
 		</div>
 		<div v-else class="inspector-wrapper">
 			<p>No element selected.</p>

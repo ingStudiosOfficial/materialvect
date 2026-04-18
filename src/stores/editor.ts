@@ -17,6 +17,7 @@ export const useEditor = defineStore('editor', () => {
 		height: 0,
 		radius: 0,
 		rotation: 0,
+		fontSize: 0,
 	});
 	const saveFunction = ref<() => void>(() => {});
 	const vector = ref<Mvct | null>(null);
@@ -70,6 +71,7 @@ export const useEditor = defineStore('editor', () => {
 		}
 
 		activeElementProperties.rotation = Number(activeElement.value.transform('rotate'));
+		activeElementProperties.fontSize = Number(activeElement.value.attr('font-size'));
 	}
 
 	watch(
@@ -88,6 +90,7 @@ export const useEditor = defineStore('editor', () => {
 			}
 
 			activeElement.value.transform({ rotate: Number(newProperties.rotation) });
+			activeElement.value.attr('font-size', Number(activeElementProperties.fontSize));
 
 			if (saveTimeout) clearTimeout(saveTimeout);
 
@@ -217,13 +220,13 @@ export const useEditor = defineStore('editor', () => {
                     top: ${bbox.top + window.scrollY}px;
                     min-width: ${bbox.width}px;
                     font-family: ${textElement.attr('font-family') || 'inherit'};
-                    font-size: ${textElement.attr('font-size')};
+                    font-size: ${textElement.attr('font-size')}px;
                     color: ${textElement.attr('fill')};
                     background: transparent;
                     outline: none;
                     white-space: pre;
                     z-index: 1000;
-                    transform: ${textElement.transform()};
+                    transform: rotate(${textElement.transform().rotate}deg);
                 `;
 				input.innerText = currentText;
 				document.body.appendChild(input);
@@ -324,7 +327,7 @@ export const useEditor = defineStore('editor', () => {
 			x: svgCanvas.value.bbox().width / 2,
 			y: svgCanvas.value.bbox().height / 2,
 			'font-family': 'var(--md-ref-typeface-plain)',
-			'font-size': '16px',
+			'font-size': '16',
 		});
 
 		registerElement(text);

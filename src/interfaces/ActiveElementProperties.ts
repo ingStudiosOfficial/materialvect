@@ -8,4 +8,5 @@ export interface ActiveElementProperties {
 	height: number;
 	radius: number;
 	rotation: number;
+	fontSize: number;
 }
