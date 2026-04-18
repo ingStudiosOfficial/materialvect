@@ -9,6 +9,7 @@ import { M3eSnackbar } from '@m3e/web/snackbar';
 import '@m3e/web/button';
 import '@m3e/web/menu';
 import '@m3e/web/icon';
+import '@m3e/web/split-pane';
 import { nextTick, onMounted, ref, toRaw, useTemplateRef } from 'vue';
 import EditorArea from '@/components/EditorArea.vue';
 import ElementInspector from '@/components/ElementInspector.vue';
@@ -16,8 +17,13 @@ import router from '@/router';
 import { useEditor } from '@/stores/editor';
 import ThemeDialog from '@/components/ThemeDialog.vue';
 import ColorPicker from '@/components/ColorPicker.vue';
+import { useFileSystem } from '@/stores/filesys';
+import { useMobile } from '@/composables/mobile';
 
 const editorStore = useEditor();
+const fileSystemStore = useFileSystem();
+
+const { isMobile } = useMobile();
 
 const vectorId = ref<string>('');
 const vectorFile = ref<Mvct | null>(null);
@@ -36,7 +42,7 @@ async function updateVectorFromEditorArea(vector: Mvct) {
 	updateVector();
 }
 
-async function updateVector() {
+async function updateVector(notBackgroundSave: boolean = true) {
 	if (!vectorFile.value) return;
 
 	try {
@@ -46,12 +52,25 @@ async function updateVector() {
 		await upsertVector(cleanData.metadata);
 		document.title = `${cleanData.metadata.name} | Materialvect`;
 		console.log('Successfully saved vector.');
-	} catch (e) {
-		console.error('Cloning failed:', e);
+	} catch (error) {
+		console.error('Saving failed:', error);
+
+		if (notBackgroundSave) {
+			const saveError = error as Error;
+
+			if (saveError.name === 'NotAllowedError') {
+				if (fileSystemStore.openFileDialogFunction) {
+					fileSystemStore.onAllowFunction = updateVector;
+					fileSystemStore.allowMessage =
+						'Materialvect needs you to allow us to access your file system to save your vector.';
+					fileSystemStore.openFileDialogFunction();
+				}
+			}
+		}
 	}
 }
 
-async function saveVector() {
+async function updateVectorSb() {
 	await updateVector();
 	M3eSnackbar.open('Successfully saved vector', {
 		duration: 4000,
@@ -110,7 +129,7 @@ onMounted(async () => {
 	document.addEventListener('keydown', (event) => {
 		if (event.ctrlKey && event.key === 's') {
 			event.preventDefault();
-			saveVector();
+			updateVectorSb();
 		}
 	});
 });
@@ -147,7 +166,7 @@ onMounted(async () => {
 						<m3e-icon slot="icon" name="add"></m3e-icon>
 						Create
 					</m3e-menu-item>
-					<m3e-menu-item @click="saveVector()">
+					<m3e-menu-item @click="updateVectorSb()">
 						<m3e-icon slot="icon" name="save"></m3e-icon>
 						Save
 					</m3e-menu-item>
@@ -183,14 +202,21 @@ onMounted(async () => {
 				</m3e-menu>
 			</div>
 		</m3e-app-bar>
-		<div class="editor-components">
-			<ElementInspector class="toolbar"></ElementInspector>
+		<m3e-split-pane
+			class="editor-components"
+			:value="isMobile ? 50 : 20"
+			:orientation="isMobile ? 'vertical' : 'horizontal'"
+			min="0"
+			max="100"
+		>
+			<ElementInspector :slot="isMobile ? 'end' : 'start'" class="toolbar"></ElementInspector>
 			<EditorArea
+				:slot="isMobile ? 'start' : 'end'"
 				:vector="vectorFile"
 				class="svg-area"
 				@change="updateVectorFromEditorArea"
 			></EditorArea>
-		</div>
+		</m3e-split-pane>
 		<ThemeDialog></ThemeDialog>
 		<ColorPicker @input="editorStore.changeColor"></ColorPicker>
 	</div>
@@ -211,7 +237,7 @@ onMounted(async () => {
 .editor-loader {
 	width: 100svw;
 	height: 100svh;
-	overflow-y: scroll;
+	overflow-y: hidden;
 	display: flex;
 	flex-direction: column;
 	box-sizing: border-box;
@@ -228,17 +254,22 @@ onMounted(async () => {
 
 .editor-components {
 	flex-grow: 1;
-	display: grid;
-	grid-template-columns: 20% 80%;
 	box-sizing: border-box;
+	min-height: 0;
+	display: flex;
+	position: relative;
 }
 
 .toolbar {
 	height: 100%;
+	min-width: 0;
+	min-height: 0;
 }
 
 .svg-area {
 	height: 100%;
+	min-width: 0;
+	min-height: 0;
 }
 
 .vector-name {

@@ -65,12 +65,26 @@ onMounted(() => {
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	container-type: size;
 }
 
 .svg-wrapper {
 	aspect-ratio: v-bind('props.vector.metadata.width') / v-bind('props.vector.metadata.height');
-	height: 100%;
+	width: min(
+		100cqw,
+		calc(
+			100cqh *
+				(v-bind('props.vector.metadata.width') / v-bind('props.vector.metadata.height'))
+		)
+	);
+	height: auto;
+	max-width: 100%;
+	max-height: 100%;
 	background-color: #ffffff;
+	min-width: 0;
+	min-height: 0;
+	flex-shrink: 1;
+	object-fit: contain;
 	box-sizing: border-box;
 	box-shadow: 0 0 10px 5px rgba(0, 0, 0, 0.1);
 	touch-action: none;
@@ -88,5 +102,11 @@ onMounted(() => {
 	stroke: var(--md-sys-color-primary) !important;
 	stroke-width: 2px !important;
 	vector-effect: non-scaling-stroke;
+}
+
+@media (max-width: 768px) {
+	.editor-area {
+		border-radius: 0 0 25px 25px;
+	}
 }
 </style>
