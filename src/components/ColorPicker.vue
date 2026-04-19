@@ -74,7 +74,7 @@ onMounted(() => {
 		<p>Default token</p>
 		<m3e-form-field v-if="vector?.theme">
 			<label slot="label" for="token-picker">Token</label>
-			<m3e-select id="token-picker" ref="tokenPicker" @input="onTokenInput()">
+			<m3e-select id="token-picker" ref="tokenPicker" @change="onTokenInput()">
 				<m3e-option
 					v-for="[token] in Object.entries(vector.theme)"
 					:key="token"
