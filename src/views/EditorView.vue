@@ -43,7 +43,7 @@ async function updateVectorFromEditorArea(vector: Mvct) {
 	updateVector();
 }
 
-async function updateVector(notBackgroundSave: boolean = true) {
+async function updateVector(notBackgroundSave: boolean = false) {
 	if (!vectorFile.value) return;
 
 	try {
