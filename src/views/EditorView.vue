@@ -29,6 +29,7 @@ const vectorId = ref<string>('');
 const vectorFile = ref<Mvct | null>(null);
 const vectorNameInput = useTemplateRef<HTMLInputElement>('vectorNameInput');
 const needAccess = ref<boolean>(false);
+const hiddenImageInput = useTemplateRef<HTMLInputElement>('hiddenImageInput');
 
 async function updateName() {
 	await updateVector();
@@ -181,6 +182,10 @@ onMounted(async () => {
 						<m3e-icon slot="icon" name="text_fields"></m3e-icon>
 						Text
 					</m3e-menu-item>
+					<m3e-menu-item @click="hiddenImageInput?.click()">
+						<m3e-icon slot="icon" name="image"></m3e-icon>
+						Image
+					</m3e-menu-item>
 				</m3e-menu>
 				<m3e-menu id="insert-shape-menu">
 					<m3e-menu-item @click="editorStore.createShape('rect')">
@@ -219,6 +224,7 @@ onMounted(async () => {
 		</m3e-split-pane>
 		<ThemeDialog></ThemeDialog>
 		<ColorPicker @input="editorStore.changeColor"></ColorPicker>
+		<input type="file" class="hidden-image-input" ref="hiddenImageInput" accept="image/*" />
 	</div>
 	<div v-else-if="vectorFile === null && needAccess === false" class="editor-loader">
 		<m3e-loading-indicator></m3e-loading-indicator>
@@ -304,5 +310,9 @@ onMounted(async () => {
 	align-items: center;
 	justify-content: flex-start;
 	gap: 10px;
+}
+
+.hidden-image-input {
+	display: none;
 }
 </style>
