@@ -63,7 +63,11 @@ export const useEditor = defineStore('editor', () => {
 		activeElementProperties.x = Number(activeElement.value.x());
 		activeElementProperties.y = Number(activeElement.value.y());
 
-		if (activeElementProperties.type === 'rect' || activeElementProperties.type === 'ellipse') {
+		if (
+			activeElementProperties.type === 'rect' ||
+			activeElementProperties.type === 'ellipse' ||
+			activeElementProperties.type === 'image'
+		) {
 			activeElementProperties.width = Number(activeElement.value.width());
 			activeElementProperties.height = Number(activeElement.value.height());
 		} else if (activeElementProperties.type === 'circle') {
@@ -82,7 +86,11 @@ export const useEditor = defineStore('editor', () => {
 			activeElement.value.x(Number(newProperties.x));
 			activeElement.value.y(Number(newProperties.y));
 
-			if (newProperties.type === 'rect' || newProperties.type === 'ellipse') {
+			if (
+				newProperties.type === 'rect' ||
+				newProperties.type === 'ellipse' ||
+				newProperties.type === 'image'
+			) {
 				activeElement.value.width(Number(newProperties.width));
 				activeElement.value.height(Number(newProperties.height));
 			} else if (newProperties.type === 'circle') {
@@ -134,7 +142,7 @@ export const useEditor = defineStore('editor', () => {
 		if (!existingStyleBlock)
 			styleBlock.value = svgVector
 				.element('style')
-				.attr({ id: 'mvct-style' })
+				.attr({ 'mvct-style': 'true' })
 				.words(vector.value.css);
 		else existingStyleBlock.words(vector.value.css);
 
@@ -160,6 +168,18 @@ export const useEditor = defineStore('editor', () => {
 			cursor: 'pointer',
 			tabindex: 0,
 		});
+
+		if (mvctElement.node.tagName === 'image') {
+			const fileName = mvctElement.attr('mvct-image');
+
+			const image = vector.value?.assets.images.find((i) => i.name === fileName);
+
+			if (image) {
+				const url = URL.createObjectURL(image);
+
+				mvctElement.attr('xlink:href', url);
+			}
+		}
 
 		mvctElement.on('pointerdown', (event) => {
 			if (svgCanvas.value === null) return;
@@ -335,6 +355,26 @@ export const useEditor = defineStore('editor', () => {
 		saveFunction.value();
 	}
 
+	function uploadImage(file: File) {
+		if (!vector.value || !svgCanvas.value) return;
+
+		const newFile = new File([file], `${Date.now()}_upload.${file.name.split('.').pop()}`, {
+			type: file.type,
+		});
+
+		vector.value.assets.images.push(newFile);
+
+		const url = URL.createObjectURL(newFile);
+
+		const image = svgCanvas.value
+			.image(url)
+			.attr({ 'mvct-image': newFile.name, preserveAspectRatio: 'none' });
+
+		registerElement(image);
+
+		saveFunction.value();
+	}
+
 	function deleteElement(mvctElement: MvctElement | null | undefined) {
 		if (!mvctElement) return;
 
@@ -396,6 +436,7 @@ export const useEditor = defineStore('editor', () => {
 		initialize,
 		createShape,
 		createText,
+		uploadImage,
 		deleteElement,
 		duplicateElement,
 		changeColor,

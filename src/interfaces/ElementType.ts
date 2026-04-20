@@ -1,1 +1,1 @@
-export type MvctElementType = 'rect' | 'circle' | 'ellipse' | 'text';
+export type MvctElementType = 'rect' | 'circle' | 'ellipse' | 'text' | 'image';

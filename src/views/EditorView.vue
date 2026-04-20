@@ -105,6 +105,15 @@ function navigateToHome() {
 	router.push('/');
 }
 
+function handleImageUpload() {
+	const files = hiddenImageInput.value?.files;
+	if (!files || files.length === 0 || !files[0]) return;
+
+	const imageFile = files[0];
+
+	editorStore.uploadImage(imageFile);
+}
+
 onMounted(async () => {
 	const url = new URL(window.location.href);
 	const id = url.pathname.split('/').filter(Boolean).at(-1);
@@ -224,7 +233,13 @@ onMounted(async () => {
 		</m3e-split-pane>
 		<ThemeDialog></ThemeDialog>
 		<ColorPicker @input="editorStore.changeColor"></ColorPicker>
-		<input type="file" class="hidden-image-input" ref="hiddenImageInput" accept="image/*" />
+		<input
+			type="file"
+			class="hidden-image-input"
+			ref="hiddenImageInput"
+			accept="image/*"
+			@input="handleImageUpload()"
+		/>
 	</div>
 	<div v-else-if="vectorFile === null && needAccess === false" class="editor-loader">
 		<m3e-loading-indicator></m3e-loading-indicator>

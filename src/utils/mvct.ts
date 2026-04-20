@@ -92,6 +92,7 @@ export async function objectToMvct(mvctObject: Mvct): Promise<Blob> {
 	const fonts = assets?.folder('fonts');
 
 	for (const image of mvctObject.assets.images) {
+		console.log('Saving image:', image.name);
 		images?.file(image.name, image);
 	}
 

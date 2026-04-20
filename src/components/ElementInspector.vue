@@ -38,7 +38,8 @@ function openColorPicker() {
 			<div
 				v-if="
 					activeElementProperties.type === 'rect' ||
-					activeElementProperties.type === 'ellipse'
+					activeElementProperties.type === 'ellipse' ||
+					activeElementProperties.type === 'image'
 				"
 				class="conditional-container"
 			>

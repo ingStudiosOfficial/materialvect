@@ -33,9 +33,13 @@ function emitVectorData() {
 		if (el.isTextHidden) {
 			elementInCanvas?.show();
 		}
+
+		if (elementInCanvas?.attr('mvct-image')) {
+			elementInCanvas.attr('xlink:href', elementInCanvas.attr('mvct-image'));
+		}
 	}
 
-	svgCanvasToSave.findOne('#mvct-style')?.remove();
+	svgCanvasToSave.findOne('[mvct-style="true"]')?.remove();
 
 	const newMvct = window.structuredClone(toRaw(inspectorStore.vector));
 	if (!newMvct) return;
