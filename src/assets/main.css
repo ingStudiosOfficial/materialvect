@@ -33,3 +33,20 @@ button {
 input {
 	font-family: inherit;
 }
+
+.mvct-logo {
+	width: fit-content;
+	height: fit-content;
+	cursor: pointer;
+	background-color: transparent;
+	border-radius: 25px;
+	box-sizing: border-box;
+}
+
+.mvct-logo:focus-visible {
+	border: 1px solid var(--md-sys-color-outline);
+}
+
+.mvct-logo-image {
+	height: 7svh;
+}

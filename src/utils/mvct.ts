@@ -36,11 +36,11 @@ export async function mvctToObject(mvctFile: File): Promise<Mvct> {
 	const imagePromises: Promise<File>[] = [];
 	const fontPromises: Promise<File>[] = [];
 
-	images.forEach((_path, file) => {
+	images.forEach((name, file) => {
 		if (file.dir) return;
 
 		const promise = file.async('blob').then((blob) => {
-			return new File([blob], _path, {
+			return new File([blob], name, {
 				type: blob.type || 'image/png',
 				lastModified: file.date.getTime(),
 			});
@@ -49,11 +49,11 @@ export async function mvctToObject(mvctFile: File): Promise<Mvct> {
 		imagePromises.push(promise);
 	});
 
-	fonts.forEach((_path, file) => {
+	fonts.forEach((name, file) => {
 		if (file.dir) return;
 
 		const promise = file.async('blob').then((blob) => {
-			return new File([blob], _path, {
+			return new File([blob], name, {
 				type: blob.type || 'font/ttf',
 				lastModified: file.date.getTime(),
 			});

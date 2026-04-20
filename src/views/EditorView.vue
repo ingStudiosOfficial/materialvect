@@ -155,6 +155,9 @@ onUnmounted(() => {
 	<div v-if="vectorFile !== null" class="editor-wrapper">
 		<m3e-app-bar class="app-bar">
 			<div slot="title" class="app-bar-title">
+				<button class="mvct-logo" @click="router.push('/')">
+					<img src="/materialvect_logo_trans_full.png" class="mvct-logo-image" />
+				</button>
 				<input
 					ref="vectorNameInput"
 					slot="title"
@@ -300,7 +303,6 @@ onUnmounted(() => {
 }
 
 .vector-name {
-	margin-left: 20px;
 	border: none;
 	outline: none;
 	color: var(--md-sys-color-on-surface-container);

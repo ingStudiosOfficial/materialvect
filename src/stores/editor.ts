@@ -312,29 +312,29 @@ export const useEditor = defineStore('editor', () => {
 	}
 
 	function createShape(shape: MvctElementType) {
-		if (!svgCanvas.value) return;
+		if (!svgCanvas.value || !vector.value) return;
 
 		if (shape === 'rect') {
 			const rect = svgCanvas.value.rect(100, 50).attr({
 				fill: 'var(--mvct-color-primary-container)',
-				x: svgCanvas.value.bbox().width / 2,
-				y: svgCanvas.value.bbox().height / 2,
+				x: vector.value.metadata.width / 2,
+				y: vector.value.metadata.height / 2,
 			});
 
 			registerElement(rect);
 		} else if (shape === 'circle') {
 			const circle = svgCanvas.value.circle(100).attr({
 				fill: 'var(--mvct-color-primary-container)',
-				cx: svgCanvas.value.bbox().width / 2,
-				cy: svgCanvas.value.bbox().height / 2,
+				cx: vector.value.metadata.width / 2,
+				cy: vector.value.metadata.height / 2,
 			});
 
 			registerElement(circle);
 		} else if (shape === 'ellipse') {
 			const ellipse = svgCanvas.value.ellipse(100, 50).attr({
 				fill: 'var(--mvct-color-primary-container)',
-				cx: svgCanvas.value.bbox().width / 2,
-				cy: svgCanvas.value.bbox().height / 2,
+				cx: vector.value.metadata.width / 2,
+				cy: vector.value.metadata.height / 2,
 			});
 
 			registerElement(ellipse);
@@ -344,13 +344,13 @@ export const useEditor = defineStore('editor', () => {
 	}
 
 	function createText() {
-		if (!svgCanvas.value) return;
+		if (!svgCanvas.value || !vector.value) return;
 
 		const text = svgCanvas.value.text('Text');
 		text.attr({
 			fill: 'var(--mvct-color-primary-container)',
-			x: svgCanvas.value.bbox().width / 2,
-			y: svgCanvas.value.bbox().height / 2,
+			x: vector.value.metadata.width / 2,
+			y: vector.value.metadata.height / 2,
 			'font-family': 'var(--md-ref-typeface-plain)',
 			'font-size': '16',
 		});
@@ -374,8 +374,8 @@ export const useEditor = defineStore('editor', () => {
 		const image = svgCanvas.value.image(url).attr({
 			'mvct-image': newFile.name,
 			preserveAspectRatio: 'none',
-			x: svgCanvas.value.bbox().width / 2,
-			y: svgCanvas.value.bbox().height / 2,
+			x: vector.value.metadata.width / 2,
+			y: vector.value.metadata.height / 2,
 		});
 
 		registerElement(image);

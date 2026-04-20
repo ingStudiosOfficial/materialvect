@@ -15,6 +15,7 @@ import { mvctToObject } from '@/utils/mvct';
 import { useVectors } from '@/stores/vectors';
 import { upsertVector } from '@/db';
 import type { M3eDialogElement } from '@m3e/web/dialog';
+import router from '@/router';
 
 const vectorsStore = useVectors();
 
@@ -57,7 +58,10 @@ async function onVectorUpload() {
 	<div class="home-wrapper">
 		<m3e-app-bar class="app-bar">
 			<div slot="title" class="app-bar-title">
-				<span style="margin-left: 20px">Materialvect</span>
+				<button class="mvct-logo" @click="router.push('/')">
+					<img src="/materialvect_logo_trans_full.png" class="mvct-logo-image" />
+				</button>
+				<span>Materialvect</span>
 				<m3e-chip v-if="isBeta" style="--m3e-chip-container-shape: 25px">BETA</m3e-chip>
 			</div>
 		</m3e-app-bar>

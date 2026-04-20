@@ -8,6 +8,9 @@ import TemplateBox from './TemplateBox.vue';
 		<div class="templates-row">
 			<TemplateBox :width="500" :height="500" name="Logo"></TemplateBox>
 			<TemplateBox :width="2480" :height="3508" name="A4"></TemplateBox>
+			<TemplateBox :width="1080" :height="1920" name="Poster"></TemplateBox>
+			<TemplateBox :width="1280" :height="720" name="YouTube Thumbnail"></TemplateBox>
+			<TemplateBox :width="1080" :height="1080" name="Instagram Post (Square)"></TemplateBox>
 		</div>
 	</div>
 </template>

@@ -1,11 +1,18 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { computed, onMounted } from 'vue';
 import RecentVectorBox from './RecentVectorBox.vue';
 import { useVectors } from '@/stores/vectors';
 import '@m3e/web/button';
 import '@m3e/web/icon';
+import { storeToRefs } from 'pinia';
 
 const vectorsStore = useVectors();
+
+const { vectorsProperties } = storeToRefs(vectorsStore);
+
+const sortedVectors = computed(() =>
+	vectorsProperties.value.toSorted((a, b) => b.modified - a.modified),
+);
 
 onMounted(async () => {
 	await vectorsStore.refreshVectorProperties();
@@ -15,20 +22,18 @@ onMounted(async () => {
 <template>
 	<div class="recents-wrapper">
 		<h3>Recent vectors</h3>
-		<div v-if="vectorsStore.vectorsProperties.length !== 0" class="vectors-box">
+		<div v-if="sortedVectors.length !== 0" class="vectors-box">
 			<RecentVectorBox
-				v-for="vector in vectorsStore.vectorsProperties"
+				v-for="vector in sortedVectors"
 				:key="vector.id"
 				v-bind="vector"
 			></RecentVectorBox>
 		</div>
-		<div
-			v-else-if="vectorsStore.vectorsProperties.length === 0 && vectorsStore.canAccessFolder"
-		>
+		<div v-else-if="sortedVectors.length === 0 && vectorsStore.canAccessFolder">
 			<p>No vectors found. Your recent vectors will be stored here.</p>
 		</div>
 		<div
-			v-else-if="vectorsStore.vectorsProperties.length === 0 && !vectorsStore.canAccessFolder"
+			v-else-if="sortedVectors.length === 0 && !vectorsStore.canAccessFolder"
 			class="no-vectors"
 		>
 			<p>No vectors found. Choose a directory to store your vectors.</p>
