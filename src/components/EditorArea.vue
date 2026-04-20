@@ -35,7 +35,8 @@ function emitVectorData() {
 		}
 
 		if (elementInCanvas?.attr('mvct-image')) {
-			elementInCanvas.attr('xlink:href', elementInCanvas.attr('mvct-image'));
+			console.log('Mvct image file found:', elementInCanvas.attr('mvct-image'));
+			elementInCanvas.attr('href', elementInCanvas.attr('mvct-image'));
 		}
 	}
 

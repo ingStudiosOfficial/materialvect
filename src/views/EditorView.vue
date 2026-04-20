@@ -10,7 +10,7 @@ import '@m3e/web/button';
 import '@m3e/web/menu';
 import '@m3e/web/icon';
 import '@m3e/web/split-pane';
-import { nextTick, onMounted, ref, toRaw, useTemplateRef } from 'vue';
+import { nextTick, onMounted, onUnmounted, ref, toRaw, useTemplateRef } from 'vue';
 import EditorArea from '@/components/EditorArea.vue';
 import ElementInspector from '@/components/ElementInspector.vue';
 import router from '@/router';
@@ -78,8 +78,8 @@ async function updateVectorSb() {
 	});
 }
 
-async function createNewVector() {
-	await updateVector();
+function createNewVector() {
+	updateVector();
 	router.push({ name: 'new' });
 }
 
@@ -114,6 +114,13 @@ function handleImageUpload() {
 	editorStore.uploadImage(imageFile);
 }
 
+function onKeyUp(event: KeyboardEvent) {
+	if (event.ctrlKey && event.key === 's') {
+		event.preventDefault();
+		updateVectorSb();
+	}
+}
+
 onMounted(async () => {
 	const url = new URL(window.location.href);
 	const id = url.pathname.split('/').filter(Boolean).at(-1);
@@ -136,12 +143,11 @@ onMounted(async () => {
 
 	document.title = `${vectorFile.value?.metadata.name || 'Untitled Vector'} | Materialvect`;
 
-	document.addEventListener('keydown', (event) => {
-		if (event.ctrlKey && event.key === 's') {
-			event.preventDefault();
-			updateVectorSb();
-		}
-	});
+	document.addEventListener('keyup', onKeyUp);
+});
+
+onUnmounted(() => {
+	document.removeEventListener('keyup', onKeyUp);
 });
 </script>
 

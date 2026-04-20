@@ -40,7 +40,7 @@ export async function mvctToObject(mvctFile: File): Promise<Mvct> {
 		if (file.dir) return;
 
 		const promise = file.async('blob').then((blob) => {
-			return new File([blob], file.name, {
+			return new File([blob], _path, {
 				type: blob.type || 'image/png',
 				lastModified: file.date.getTime(),
 			});
@@ -53,7 +53,7 @@ export async function mvctToObject(mvctFile: File): Promise<Mvct> {
 		if (file.dir) return;
 
 		const promise = file.async('blob').then((blob) => {
-			return new File([blob], file.name, {
+			return new File([blob], _path, {
 				type: blob.type || 'font/ttf',
 				lastModified: file.date.getTime(),
 			});

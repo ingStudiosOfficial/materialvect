@@ -172,12 +172,17 @@ export const useEditor = defineStore('editor', () => {
 		if (mvctElement.node.tagName === 'image') {
 			const fileName = mvctElement.attr('mvct-image');
 
+			console.log('File name:', fileName);
+			console.log('Vector assets:', vector.value?.assets.images);
+
 			const image = vector.value?.assets.images.find((i) => i.name === fileName);
 
 			if (image) {
+				console.log('Image found:', image);
+
 				const url = URL.createObjectURL(image);
 
-				mvctElement.attr('xlink:href', url);
+				mvctElement.attr('href', url);
 			}
 		}
 
@@ -366,9 +371,12 @@ export const useEditor = defineStore('editor', () => {
 
 		const url = URL.createObjectURL(newFile);
 
-		const image = svgCanvas.value
-			.image(url)
-			.attr({ 'mvct-image': newFile.name, preserveAspectRatio: 'none' });
+		const image = svgCanvas.value.image(url).attr({
+			'mvct-image': newFile.name,
+			preserveAspectRatio: 'none',
+			x: svgCanvas.value.bbox().width / 2,
+			y: svgCanvas.value.bbox().height / 2,
+		});
 
 		registerElement(image);
 
@@ -376,7 +384,7 @@ export const useEditor = defineStore('editor', () => {
 	}
 
 	function deleteElement(mvctElement: MvctElement | null | undefined) {
-		if (!mvctElement) return;
+		if (!mvctElement || !vector.value) return;
 
 		allElements.splice(
 			allElements.findIndex(
@@ -384,6 +392,18 @@ export const useEditor = defineStore('editor', () => {
 			),
 		);
 		mvctElement.remove();
+
+		if (mvctElement.node.tagName === 'image') {
+			const imagePath = mvctElement.attr('mvct-image');
+			const otherImagesWithPath = svgCanvas.value?.find(`[mvct-image="${imagePath}"]`);
+			if (!otherImagesWithPath || otherImagesWithPath.length === 0) {
+				const indexOfImage = vector.value.assets.images
+					.map((i) => i.name)
+					.indexOf(imagePath);
+				vector.value.assets.images.splice(indexOfImage, 1);
+			}
+		}
+
 		saveFunction.value();
 	}
 
