@@ -28,6 +28,7 @@ export const useEditor = defineStore('editor', () => {
 	const openThemeFunction = ref<(() => void) | null>(null);
 	const styleBlock = ref<Svg | null>(null);
 	const openColorPickerFunction = ref<(() => void) | null>(null);
+	const openFontFunction = ref<(() => void) | null>(null);
 
 	let isDragging = false;
 	let startPoint = { x: 0, y: 0 };
@@ -453,6 +454,7 @@ export const useEditor = defineStore('editor', () => {
 		openThemeFunction,
 		saveFunction,
 		openColorPickerFunction,
+		openFontFunction,
 		initialize,
 		createShape,
 		createText,

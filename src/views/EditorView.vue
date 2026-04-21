@@ -19,6 +19,7 @@ import ThemeDialog from '@/components/ThemeDialog.vue';
 import ColorPicker from '@/components/ColorPicker.vue';
 import { useFileSystem } from '@/stores/filesys';
 import { useMobile } from '@/composables/mobile';
+import FontPicker from '@/components/FontPicker.vue';
 
 const editorStore = useEditor();
 const fileSystemStore = useFileSystem();
@@ -242,6 +243,7 @@ onUnmounted(() => {
 		</m3e-split-pane>
 		<ThemeDialog></ThemeDialog>
 		<ColorPicker @input="editorStore.changeColor"></ColorPicker>
+		<FontPicker></FontPicker>
 		<input
 			type="file"
 			class="hidden-image-input"

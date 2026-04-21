@@ -3,8 +3,10 @@ import { useEditor } from '@/stores/editor';
 import { storeToRefs } from 'pinia';
 import '@m3e/web/button';
 import '@m3e/web/button-group';
+import { onMounted } from 'vue';
 
 const editorStore = useEditor();
+
 const { activeElement, activeElementProperties } = storeToRefs(editorStore);
 
 function openColorPicker() {
@@ -12,6 +14,25 @@ function openColorPicker() {
 
 	editorStore.openColorPickerFunction();
 }
+
+function openFontPicker() {
+	if (!editorStore.openFontFunction) return;
+
+	editorStore.openFontFunction();
+}
+
+onMounted(async () => {
+	/*
+	try {
+		systemFonts.value = await getAllLocalFonts();
+	} catch (error) {
+		console.error('Error while fetching local fonts:', error);
+		M3eSnackbar.open((error as Error).message, {
+			duration: 0.4,
+		});
+	}
+        */
+});
 </script>
 
 <template>
@@ -63,9 +84,16 @@ function openColorPicker() {
 			<button class="color-picker-btn" @click="openColorPicker()">Choose color</button>
 
 			<div v-if="activeElementProperties.type === 'text'" class="conditional-container">
+				<p>Font</p>
+				<m3e-button variant="text" @click="openFontPicker()">Select font</m3e-button>
+			</div>
+
+			<!--
+			<div v-if="activeElementProperties.type === 'text'" class="conditional-container">
 				<p>Font size</p>
 				<input class="inspector-input" v-model.number="activeElementProperties.fontSize" />
 			</div>
+            -->
 		</div>
 		<div v-else class="inspector-wrapper">
 			<p>No element selected.</p>
