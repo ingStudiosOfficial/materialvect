@@ -6,15 +6,24 @@ import '@m3e/web/form-field';
 import '@m3e/web/select';
 import '@m3e/web/option';
 import { M3eDialogElement } from '@m3e/web/dialog';
+import '@m3e/web/progress-indicator';
 import { onMounted, ref, useTemplateRef, watchEffect } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Font, parse } from 'opentype.js';
+import { getAllLocalFonts } from '@/utils/font';
+import { M3eSnackbar } from '@m3e/web/snackbar';
+import { M3eSelectElement } from '@m3e/web/select';
 
 const editorStore = useEditor();
 
 const { vector } = storeToRefs(editorStore);
 const fontDialog = useTemplateRef<M3eDialogElement>('fontDialog');
 const fonts = ref<Font[]>([]);
+const selectedFont = ref<Font | null>(null);
+const localFonts = ref<FontData[]>([]);
+const localFontsFetchSuccess = ref<boolean>(false);
+const existingFontSelect = useTemplateRef<M3eSelectElement>('existingFontSelect');
+const localFontSelect = useTemplateRef<M3eSelectElement>('localFontSelect');
 
 watchEffect(async () => {
 	const promises = vector.value?.assets.fonts.map(async (f) => {
@@ -32,24 +41,102 @@ function openFontDialog() {
 	fontDialog.value?.show();
 }
 
+async function fetchLocalFonts() {
+	try {
+		const fetchedLocalFonts = await getAllLocalFonts();
+		localFonts.value = fetchedLocalFonts;
+		localFontsFetchSuccess.value = true;
+	} catch (error) {
+		console.error('Error while fetching local fonts:', error);
+		M3eSnackbar.open((error as Error).message, {
+			duration: 4000,
+		});
+	}
+}
+
+async function selectExistingFont() {
+	const fontPostsript = existingFontSelect.value?.value;
+	console.log('Selected existing font:', fontPostsript);
+	if (!fontPostsript) return;
+
+	const font = fonts.value.find((f) => f.names.postScriptName.en === fontPostsript);
+	console.log('Font:', font);
+
+	if (font) selectedFont.value = font;
+	if (localFontSelect.value?.value) localFontSelect.value.clear();
+}
+
+async function selectLocalFont() {
+	const fontPostsript = localFontSelect.value?.value;
+	if (!fontPostsript) return;
+
+	const font = localFonts.value.find((f) => f.postscriptName === fontPostsript);
+	if (!font) return;
+
+	try {
+		const blob = await font.blob();
+		const buffer = await blob.arrayBuffer();
+		const parsedFont = parse(buffer);
+
+		selectedFont.value = parsedFont;
+		if (existingFontSelect.value?.value) existingFontSelect.value.clear();
+	} catch (error) {
+		console.error('Error while selecting local font:', error);
+		M3eSnackbar.open((error as Error).message, {
+			duration: 4000,
+		});
+	}
+}
+
 onMounted(() => {
 	editorStore.openFontFunction = openFontDialog;
 });
 </script>
 
 <template>
-	<m3e-dialog ref="fontDialog">
+	<m3e-dialog ref="fontDialog" dismissible>
 		<span slot="header">Choose font</span>
 		<div class="content">
-			<m3e-form-field v-if="vector">
+			<m3e-form-field v-if="vector" class="dialog-field">
 				<label slot="label" for="font-select">Existing font</label>
-				<m3e-select id="font-select">
-					<m3e-option v-for="font in fonts" :key="font.names.postScriptName">{{
-						font.names.fontFamily.en
-					}}</m3e-option>
+				<m3e-select
+					id="font-select"
+					ref="existingFontSelect"
+					@change="selectExistingFont()"
+				>
+					<m3e-option
+						v-for="font in fonts"
+						:key="font.names.postScriptName.en || Math.random()"
+						:value="font.names.postScriptName.en"
+						>{{ font.names.fullName.en }}</m3e-option
+					>
 				</m3e-select>
 			</m3e-form-field>
-			<m3e-button variant="tonal">Choose local font</m3e-button>
+
+			<m3e-form-field v-if="localFontsFetchSuccess" class="dialog-field">
+				<label slot="label" for="font-select">Local font</label>
+				<m3e-select id="font-select" ref="localFontSelect" @change="selectLocalFont()">
+					<m3e-option
+						v-for="font in localFonts"
+						:key="font.postscriptName"
+						:value="font.postscriptName"
+						>{{ font.fullName }}</m3e-option
+					>
+				</m3e-select>
+			</m3e-form-field>
+			<m3e-button v-else variant="tonal" @click="fetchLocalFonts()"
+				>Fetch local fonts</m3e-button
+			>
+		</div>
+		<div slot="actions" class="actions" end>
+			<p class="selected-font-name">
+				{{
+					selectedFont?.names?.fullName?.en
+						? `Font: ${selectedFont?.names?.fullName?.en}`
+						: 'No selected font'
+				}}
+			</p>
+			<m3e-button variant="filled">Select</m3e-button>
 		</div>
 	</m3e-dialog>
 </template>
@@ -58,5 +145,22 @@ onMounted(() => {
 .content {
 	display: flex;
 	flex-direction: column;
+	gap: 20px;
+	padding: 10px 0;
+}
+
+.dialog-field {
+	width: 100%;
+}
+
+.actions {
+	gap: 20px;
+}
+
+.selected-font-name {
+	width: 15ch;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 </style>

@@ -28,7 +28,7 @@ onMounted(async () => {
 	} catch (error) {
 		console.error('Error while fetching local fonts:', error);
 		M3eSnackbar.open((error as Error).message, {
-			duration: 0.4,
+			duration: 4000,
 		});
 	}
         */
@@ -85,7 +85,7 @@ onMounted(async () => {
 
 			<div v-if="activeElementProperties.type === 'text'" class="conditional-container">
 				<p>Font</p>
-				<m3e-button variant="text" @click="openFontPicker()">Select font</m3e-button>
+				<m3e-button variant="outlined" @click="openFontPicker()">Select font</m3e-button>
 			</div>
 
 			<!--

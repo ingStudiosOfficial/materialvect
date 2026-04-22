@@ -38,7 +38,7 @@ function generateThemeColor() {
 	editorStore.saveFunction();
 
 	M3eSnackbar.open('Successfully generated theme', {
-		duration: 0.4,
+		duration: 4000,
 	});
 }
 
@@ -74,5 +74,6 @@ onMounted(() => {
 	align-items: flex-start;
 	justify-content: flex-start;
 	gap: 20px;
+	padding: 10px 0;
 }
 </style>

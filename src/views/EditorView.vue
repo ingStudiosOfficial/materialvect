@@ -90,7 +90,7 @@ async function retryFetchProject() {
 		vectorFile.value = project;
 	} catch (error) {
 		M3eSnackbar.open((error as Error).message, {
-			duration: 0.4,
+			duration: 4000,
 		});
 	}
 }
@@ -137,7 +137,7 @@ onMounted(async () => {
 			needAccess.value = true;
 		} else {
 			M3eSnackbar.open((error as Error).message, {
-				duration: 0.4,
+				duration: 4000,
 			});
 		}
 	}

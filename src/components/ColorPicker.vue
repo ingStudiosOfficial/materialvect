@@ -71,20 +71,23 @@ onMounted(() => {
 <template>
 	<m3e-dialog ref="colorDialog" dismissible>
 		<span slot="header">Color</span>
-		<p>Default token</p>
-		<m3e-form-field v-if="vector?.theme">
-			<label slot="label" for="token-picker">Token</label>
-			<m3e-select id="token-picker" ref="tokenPicker" @change="onTokenInput()">
-				<m3e-option
-					v-for="[token] in Object.entries(vector.theme)"
-					:key="token"
-					:value="token"
-					>{{ tokenToName(token) }}</m3e-option
-				>
-			</m3e-select>
-		</m3e-form-field>
-		<p>Custom color</p>
-		<input type="color" v-model="customColor" />
+		<div class="content">
+			<p>Default token</p>
+			<m3e-form-field v-if="vector?.theme">
+				<label slot="label" for="token-picker">Token</label>
+				<m3e-select id="token-picker" ref="tokenPicker" @change="onTokenInput()">
+					<m3e-option
+						v-for="[token] in Object.entries(vector.theme)"
+						:key="token"
+						:value="token"
+						>{{ tokenToName(token) }}</m3e-option
+					>
+				</m3e-select>
+			</m3e-form-field>
+			<p>Custom color</p>
+			<input type="color" v-model="customColor" />
+		</div>
+
 		<div slot="actions" end>
 			<m3e-button variant="filled" @click="emit('input', selectedColor)">
 				<m3e-dialog-action>Apply</m3e-dialog-action>
@@ -93,4 +96,8 @@ onMounted(() => {
 	</m3e-dialog>
 </template>
 
-<style scoped></style>
+<style scoped>
+.content {
+	padding: 10px 0;
+}
+</style>

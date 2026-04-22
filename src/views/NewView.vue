@@ -21,7 +21,7 @@ async function retryCreateProject() {
 		router.replace({ name: 'editor', params: { id: projectToCreate.value.metadata.id } });
 	} catch (error) {
 		M3eSnackbar.open((error as Error).message, {
-			duration: 0.4,
+			duration: 4000,
 		});
 	}
 }
@@ -81,7 +81,7 @@ onMounted(async () => {
 			projectToCreate.value = vectorFile;
 		} else {
 			M3eSnackbar.open((error as Error).message, {
-				duration: 0.4,
+				duration: 4000,
 			});
 		}
 	}

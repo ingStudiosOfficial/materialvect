@@ -23,7 +23,7 @@ async function tryDeleteVector() {
 	} catch (error) {
 		console.error('Error while deleting vector:', error);
 		M3eSnackbar.open((error as Error).message, {
-			duration: 0.4,
+			duration: 4000,
 		});
 	}
 }
