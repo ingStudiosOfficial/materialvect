@@ -13,6 +13,7 @@ import { Font, parse } from 'opentype.js';
 import { getAllLocalFonts } from '@/utils/font';
 import { M3eSnackbar } from '@m3e/web/snackbar';
 import { M3eSelectElement } from '@m3e/web/select';
+import { extension } from 'mime-types';
 
 const editorStore = useEditor();
 
@@ -25,10 +26,16 @@ const localFontsFetchSuccess = ref<boolean>(false);
 const existingFontSelect = useTemplateRef<M3eSelectElement>('existingFontSelect');
 const localFontSelect = useTemplateRef<M3eSelectElement>('localFontSelect');
 
+const fontTypes: { postscriptName: string; mimeType: string }[] = [];
+
 watchEffect(async () => {
 	const promises = vector.value?.assets.fonts.map(async (f) => {
 		const buffer = await f.arrayBuffer();
 		const font = parse(buffer);
+		fontTypes.push({
+			postscriptName: font.names.postScriptName.en as string,
+			mimeType: f.type,
+		});
 		return font;
 	});
 
@@ -75,17 +82,41 @@ async function selectLocalFont() {
 
 	try {
 		const blob = await font.blob();
+		const mimeType = blob.type;
+		fontTypes.push({ postscriptName: fontPostsript as string, mimeType: mimeType });
+
 		const buffer = await blob.arrayBuffer();
 		const parsedFont = parse(buffer);
 
 		selectedFont.value = parsedFont;
 		if (existingFontSelect.value?.value) existingFontSelect.value.clear();
+		addLocalFont(parsedFont);
 	} catch (error) {
 		console.error('Error while selecting local font:', error);
 		M3eSnackbar.open((error as Error).message, {
 			duration: 4000,
 		});
 	}
+}
+
+function addLocalFont(parsedFont: Font) {
+	if (
+		fonts.value
+			.map((f) => f.names.postScriptName.en)
+			.includes(parsedFont.names.postScriptName.en)
+	)
+		return;
+
+	const mimeType = fontTypes.find((f) => f.postscriptName === parsedFont.names.postScriptName.en);
+	if (!mimeType?.mimeType) return;
+
+	const buffer = parsedFont.toArrayBuffer();
+	const file = new File([buffer], `${extension(mimeType.mimeType)}`, {
+		type: mimeType.mimeType,
+		lastModified: Date.now(),
+	});
+
+	vector.value?.assets.fonts.push(file);
 }
 
 onMounted(() => {
