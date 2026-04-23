@@ -4,7 +4,7 @@ import '@m3e/web/select';
 import '@m3e/web/form-field';
 import '@m3e/web/option';
 import { M3eDialogElement } from '@m3e/web/dialog';
-import { onMounted, ref, useTemplateRef, watch } from 'vue';
+import { nextTick, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { useEditor } from '@/stores/editor';
 import { keyToCssVar } from '@/utils/theme';
 import type { MvctTheme } from '@/interfaces/Theme';
@@ -27,6 +27,8 @@ const { vector } = storeToRefs(editorStore);
 const selectedColor = ref<string>('var(--mvct-color-primary-container)');
 const customColor = ref<string>('#ffffff');
 
+let pickingToken = false;
+
 function openColorPicker() {
 	dialogRef.value?.show();
 }
@@ -39,25 +41,29 @@ function tokenToName(token: string): string {
 async function onTokenInput() {
 	if (!tokenPicker.value?.value || !vector.value?.theme) return;
 
+	pickingToken = true;
+
 	const tokenValue = tokenPicker.value.value;
 	console.log('Token value:', tokenValue);
 
 	const tokenCss = keyToCssVar(tokenValue as keyof MvctTheme);
-
 	selectedColor.value = tokenCss;
-
 	console.log('Selected color:', selectedColor.value);
 
 	const colorFromKey = hexFromArgb(vector.value.theme[tokenValue as keyof MvctTheme]);
 
 	console.log('Color from key:', colorFromKey);
-
 	customColor.value = colorFromKey;
+
+	await nextTick();
+
+	pickingToken = false;
 }
 
 watch(customColor, (newColor, oldColor) => {
-	if (newColor === oldColor) return;
+	if (newColor === oldColor || pickingToken) return;
 
+	console.log('Selected color:', newColor);
 	selectedColor.value = newColor;
 });
 

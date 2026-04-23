@@ -6,7 +6,6 @@ import { List, Rect, Svg, SVG, Text, type Element as SvgElement } from '@svgdotj
 import type { Mvct } from '@/interfaces/Mvct';
 import type { MvctElementType } from '@/interfaces/ElementType';
 import type { MvctTheme } from '@/interfaces/Theme';
-import { hexFromArgb } from '@material/material-color-utilities';
 
 export const useEditor = defineStore('editor', () => {
 	const activeElement = ref<MvctElement | null>(null);
@@ -431,6 +430,7 @@ export const useEditor = defineStore('editor', () => {
 			allElements.findIndex(
 				(element) => element.attr('mvct-id') === mvctElement.attr('mvct-id'),
 			),
+			1,
 		);
 		mvctElement.remove();
 
@@ -463,10 +463,13 @@ export const useEditor = defineStore('editor', () => {
 	}
 
 	function changeColor(color: string) {
+		console.log('Changing color:', color);
+
 		if (!activeElement.value) {
 			console.log('No active element, changing canvas color.');
-			rectBg.value?.fill(color);
-		} else activeElement.value.fill(color);
+			console.log(`fill: ${color};`);
+			rectBg.value?.attr('style', `fill: ${color};`);
+		} else activeElement.value.attr('style', `fill: ${color};`);
 
 		inspectorLastSelectedColor.value = color;
 		saveFunction.value();
