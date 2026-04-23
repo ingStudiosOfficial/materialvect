@@ -27,8 +27,16 @@ const existingFontSelect = useTemplateRef<M3eSelectElement>('existingFontSelect'
 const localFontSelect = useTemplateRef<M3eSelectElement>('localFontSelect');
 
 const fontTypes: { postscriptName: string; mimeType: string }[] = [];
+const createdUrls = new Set<string>();
 
-watchEffect(async () => {
+watchEffect(async (onCleanup) => {
+	console.log('Font watch effect called.');
+
+	onCleanup(() => {
+		createdUrls.forEach((url) => URL.revokeObjectURL(url));
+		createdUrls.clear();
+	});
+
 	const promises = vector.value?.assets.fonts.map(async (f) => {
 		const buffer = await f.arrayBuffer();
 		const font = parse(buffer);
@@ -36,6 +44,26 @@ watchEffect(async () => {
 			postscriptName: font.names.postScriptName.en as string,
 			mimeType: f.type,
 		});
+
+		const fontIdentifier = `/* mvct-font-id: ${font.names.postScriptName.en} */`;
+		const includesFont = editorStore.styleBlock?.node.textContent.includes(fontIdentifier);
+
+		if (!includesFont && editorStore.styleBlock?.node.textContent) {
+			const url = URL.createObjectURL(f);
+			createdUrls.add(url);
+
+			const fontFace = `
+${fontIdentifier}
+@font-face {
+    font-family: ${font.names.fontFamily.en};
+    src: url(${url});
+    font-weight: ${font.tables.os2?.usWeightClass};
+    font-style: ${font.names.fontSubfamily.en};
+    font-display: swap;
+}`;
+			editorStore.styleBlock.node.textContent += fontFace;
+		}
+
 		return font;
 	});
 
@@ -100,23 +128,86 @@ async function selectLocalFont() {
 }
 
 function addLocalFont(parsedFont: Font) {
+	console.log('Attempting to add local font:', parsedFont);
+
 	if (
 		fonts.value
 			.map((f) => f.names.postScriptName.en)
 			.includes(parsedFont.names.postScriptName.en)
-	)
+	) {
+		console.log('Font already included.');
 		return;
+	}
 
 	const mimeType = fontTypes.find((f) => f.postscriptName === parsedFont.names.postScriptName.en);
 	if (!mimeType?.mimeType) return;
 
 	const buffer = parsedFont.toArrayBuffer();
-	const file = new File([buffer], `${extension(mimeType.mimeType)}`, {
-		type: mimeType.mimeType,
-		lastModified: Date.now(),
-	});
+	const file = new File(
+		[buffer],
+		`${parsedFont.names.postScriptName.en}.${extension(mimeType.mimeType)}`,
+		{
+			type: mimeType.mimeType,
+			lastModified: Date.now(),
+		},
+	);
 
 	vector.value?.assets.fonts.push(file);
+
+	console.log('Added local font:', file.name, vector.value?.assets.fonts);
+}
+
+async function applyFont() {
+	console.log('Applying font:', selectedFont.value?.names.postScriptName.en);
+
+	if (
+		!editorStore.styleBlock ||
+		!selectedFont.value ||
+		!selectedFont.value.names.postScriptName.en
+	) {
+		console.log('One of the values are missing, cannot apply font.');
+		return;
+	}
+
+	const fontIdentifier = `/* mvct-font-id: ${selectedFont.value.names.postScriptName.en} */`;
+
+	const includesFont = editorStore.styleBlock.node.textContent.includes(fontIdentifier);
+	console.log('Includes font:', includesFont);
+
+	if (!includesFont) {
+		console.log('CSS does not include font.');
+
+		try {
+			const arrayBuffer = selectedFont.value.toArrayBuffer();
+			const blob = new Blob([arrayBuffer]);
+			const url = URL.createObjectURL(blob);
+
+			const fontFace = `
+${fontIdentifier}
+@font-face {
+    font-family: ${selectedFont.value.names.fontFamily.en};
+    src: url(${url});
+    font-weight: ${selectedFont.value.tables.os2?.usWeightClass};
+    font-style: ${selectedFont.value.names.fontSubfamily.en};
+    font-display: swap;
+}`;
+
+			editorStore.styleBlock.node.textContent += fontFace;
+			console.log('Added font face:', fontFace, editorStore.styleBlock.node.textContent);
+		} catch (error) {
+			M3eSnackbar.open((error as Error).message, {
+				duration: 4000,
+			});
+			return;
+		}
+	}
+
+	editorStore.activeElement?.attr('font-family', selectedFont.value.names.fontFamily.en);
+	console.log('Set font family:', selectedFont.value.names.fontFamily.en);
+
+	fontDialog.value?.hide();
+
+	editorStore.saveFunction();
 }
 
 onMounted(() => {
@@ -167,7 +258,7 @@ onMounted(() => {
 						: 'No selected font'
 				}}
 			</p>
-			<m3e-button variant="filled">Select</m3e-button>
+			<m3e-button variant="filled" @click="applyFont()">Apply</m3e-button>
 		</div>
 	</m3e-dialog>
 </template>

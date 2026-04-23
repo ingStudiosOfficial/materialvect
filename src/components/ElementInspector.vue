@@ -87,13 +87,10 @@ onMounted(async () => {
 				<p>Font</p>
 				<m3e-button variant="outlined" @click="openFontPicker()">Select font</m3e-button>
 			</div>
-
-			<!--
 			<div v-if="activeElementProperties.type === 'text'" class="conditional-container">
 				<p>Font size</p>
 				<input class="inspector-input" v-model.number="activeElementProperties.fontSize" />
 			</div>
-            -->
 		</div>
 		<div v-else class="inspector-wrapper">
 			<p>No element selected.</p>

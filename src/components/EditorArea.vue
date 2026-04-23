@@ -19,7 +19,7 @@ const emit = defineEmits<ComponentEmits>();
 const inspectorStore = useEditor();
 
 function emitVectorData() {
-	if (!inspectorStore.svgCanvas || inspectorStore.isDragging) return;
+	if (!inspectorStore.svgCanvas || inspectorStore.isDragging || !inspectorStore.vector) return;
 
 	const svgCanvasToSave = (inspectorStore.svgCanvas as Svg).clone(true);
 
@@ -45,6 +45,7 @@ function emitVectorData() {
 	const newMvct = window.structuredClone(toRaw(inspectorStore.vector));
 	if (!newMvct) return;
 	newMvct.svg = svgCanvasToSave.node.innerHTML;
+	newMvct.assets.fonts = inspectorStore.vector.assets.fonts;
 
 	emit('change', newMvct);
 }

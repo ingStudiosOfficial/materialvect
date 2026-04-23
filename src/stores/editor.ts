@@ -366,6 +366,7 @@ export const useEditor = defineStore('editor', () => {
 
 		const newFile = new File([file], `${Date.now()}_upload.${file.name.split('.').pop()}`, {
 			type: file.type,
+			lastModified: Date.now(),
 		});
 
 		vector.value.assets.images.push(newFile);
@@ -455,6 +456,7 @@ export const useEditor = defineStore('editor', () => {
 		saveFunction,
 		openColorPickerFunction,
 		openFontFunction,
+		styleBlock,
 		initialize,
 		createShape,
 		createText,

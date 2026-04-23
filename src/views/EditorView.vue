@@ -50,6 +50,7 @@ async function updateVector(notBackgroundSave: boolean = false) {
 	try {
 		vectorFile.value.metadata.modified = Date.now();
 		const cleanData = { ...toRaw(vectorFile.value) };
+		console.log('Clean data fonts:', cleanData.assets.fonts);
 		await saveProjectToDisk(cleanData);
 		await upsertVector(cleanData.metadata);
 		document.title = `${cleanData.metadata.name} | Materialvect`;
