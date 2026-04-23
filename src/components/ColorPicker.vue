@@ -4,7 +4,7 @@ import '@m3e/web/select';
 import '@m3e/web/form-field';
 import '@m3e/web/option';
 import { M3eDialogElement } from '@m3e/web/dialog';
-import { nextTick, onMounted, ref, useTemplateRef, watch } from 'vue';
+import { onMounted, ref, useTemplateRef, watch } from 'vue';
 import { useEditor } from '@/stores/editor';
 import { keyToCssVar } from '@/utils/theme';
 import type { MvctTheme } from '@/interfaces/Theme';
@@ -38,8 +38,6 @@ function tokenToName(token: string): string {
 
 async function onTokenInput() {
 	if (!tokenPicker.value?.value || !vector.value?.theme) return;
-
-	await nextTick(); // Ensures that m3e can remove the previous value
 
 	const tokenValue = tokenPicker.value.value;
 	console.log('Token value:', tokenValue);

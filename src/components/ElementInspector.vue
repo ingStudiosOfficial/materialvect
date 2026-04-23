@@ -7,7 +7,7 @@ import { onMounted } from 'vue';
 
 const editorStore = useEditor();
 
-const { activeElement, activeElementProperties } = storeToRefs(editorStore);
+const { activeElement, activeElementProperties, vector } = storeToRefs(editorStore);
 
 function openColorPicker() {
 	if (!editorStore.openColorPickerFunction) return;
@@ -19,6 +19,18 @@ function openFontPicker() {
 	if (!editorStore.openFontFunction) return;
 
 	editorStore.openFontFunction();
+}
+
+function setVectorDimensions() {
+	if (!vector.value) return;
+
+	const width = activeElementProperties.value.width;
+	const height = activeElementProperties.value.height;
+
+	vector.value.metadata.width = width;
+	vector.value.metadata.height = height;
+
+	editorStore.saveFunction();
 }
 
 onMounted(async () => {
@@ -81,7 +93,15 @@ onMounted(async () => {
 			<input class="inspector-input" v-model.number="activeElementProperties.rotation" />
 
 			<p>Color</p>
-			<button class="color-picker-btn" @click="openColorPicker()">Choose color</button>
+			<button
+				class="color-picker-btn"
+				:style="{
+					backgroundColor: editorStore.inspectorLastSelectedColor,
+				}"
+				@click="openColorPicker()"
+			>
+				Choose color
+			</button>
 
 			<div v-if="activeElementProperties.type === 'text'" class="conditional-container">
 				<p>Font</p>
@@ -93,7 +113,29 @@ onMounted(async () => {
 			</div>
 		</div>
 		<div v-else class="inspector-wrapper">
-			<p>No element selected.</p>
+			<h4>Canvas Inspector</h4>
+			<p>Width</p>
+			<input
+				class="inspector-input"
+				v-model.number="activeElementProperties.width"
+				@input="setVectorDimensions()"
+			/>
+			<p>Height</p>
+			<input
+				class="inspector-input"
+				v-model.number="activeElementProperties.height"
+				@input="setVectorDimensions"
+			/>
+			<p>Color</p>
+			<button
+				class="color-picker-btn"
+				:style="{
+					backgroundColor: editorStore.inspectorLastSelectedColor,
+				}"
+				@click="openColorPicker()"
+			>
+				Choose color
+			</button>
 		</div>
 	</div>
 </template>

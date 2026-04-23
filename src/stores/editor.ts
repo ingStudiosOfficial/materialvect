@@ -2,14 +2,15 @@ import { defineStore } from 'pinia';
 import { reactive, ref, watch } from 'vue';
 import type { MvctElement } from '@/interfaces/MvctElement';
 import type { ActiveElementProperties } from '@/interfaces/ActiveElementProperties';
-import { List, Svg, SVG, Text, type Element as SvgElement } from '@svgdotjs/svg.js';
+import { List, Rect, Svg, SVG, Text, type Element as SvgElement } from '@svgdotjs/svg.js';
 import type { Mvct } from '@/interfaces/Mvct';
 import type { MvctElementType } from '@/interfaces/ElementType';
 import type { MvctTheme } from '@/interfaces/Theme';
+import { hexFromArgb } from '@material/material-color-utilities';
 
 export const useEditor = defineStore('editor', () => {
 	const activeElement = ref<MvctElement | null>(null);
-	const activeElementProperties = reactive<ActiveElementProperties>({
+	const defaultProperties: ActiveElementProperties = {
 		type: 'rect',
 		x: 0,
 		y: 0,
@@ -18,7 +19,8 @@ export const useEditor = defineStore('editor', () => {
 		radius: 0,
 		rotation: 0,
 		fontSize: 0,
-	});
+	};
+	const activeElementProperties = reactive<ActiveElementProperties>(defaultProperties);
 	const saveFunction = ref<() => void>(() => {});
 	const vector = ref<Mvct | null>(null);
 	const svgCanvas = ref<Svg | null>(null);
@@ -29,6 +31,8 @@ export const useEditor = defineStore('editor', () => {
 	const styleBlock = ref<Svg | null>(null);
 	const openColorPickerFunction = ref<(() => void) | null>(null);
 	const openFontFunction = ref<(() => void) | null>(null);
+	const rectBg = ref<Rect | null>(null);
+	const inspectorLastSelectedColor = ref<string>('var(--md-sys-color-surface-container-high)');
 
 	let isDragging = false;
 	let startPoint = { x: 0, y: 0 };
@@ -55,6 +59,7 @@ export const useEditor = defineStore('editor', () => {
 
 	function clearActiveElement() {
 		activeElement.value = null;
+		Object.assign(activeElementProperties, defaultProperties);
 	}
 
 	function updateCurrentProperties() {
@@ -125,7 +130,7 @@ export const useEditor = defineStore('editor', () => {
 		svgVector.viewbox(0, 0, vector.value.metadata.width, vector.value.metadata.height);
 
 		svgVector.on('pointerdown', (event) => {
-			if (event.target === svgVector.node) {
+			if (event.target === svgVector.node || event.target === rectBg.value?.node) {
 				allElements.forEach((element) => {
 					element.removeClass('mvct-focus');
 				});
@@ -135,10 +140,27 @@ export const useEditor = defineStore('editor', () => {
 
 		svgCanvas.value = svgVector;
 
+		console.log('Background element exists:', vector.value.svg.includes('mvct-bg'));
+
+		let newRectBg: Rect | null = null;
+
+		if (!vector.value.svg.includes('mvct-bg'))
+			newRectBg = svgCanvas.value
+				.rect('100%', '100%')
+				.fill('var(--mvct-color-background)')
+				.attr({ 'mvct-bg': true });
+
 		svgVector.svg(vector.value.svg);
+
+		rectBg.value = newRectBg || (svgVector.findOne('[mvct-bg="true"]') as Rect);
+
+		inspectorLastSelectedColor.value = rectBg.value.fill();
+		activeElementProperties.width = vector.value.metadata.width;
+		activeElementProperties.height = vector.value.metadata.height;
+
 		console.log('CSS:', vector.value.css);
 
-		const existingStyleBlock = svgVector.findOne('#mvct-style');
+		const existingStyleBlock = svgVector.findOne('[mvct-style="true"]');
 
 		if (!existingStyleBlock)
 			styleBlock.value = svgVector
@@ -155,6 +177,21 @@ export const useEditor = defineStore('editor', () => {
 	}
 
 	function registerElement(element: SvgElement) {
+		if (element.attr('mvct-bg')) {
+			element.on('pointerdown', () => {
+				allElements.forEach((element) => {
+					element.removeClass('mvct-focus');
+				});
+				clearActiveElement();
+				inspectorLastSelectedColor.value = element.fill();
+				if (vector.value) {
+					activeElementProperties.width = vector.value.metadata.width;
+					activeElementProperties.height = vector.value.metadata.height;
+				}
+			});
+			return;
+		}
+
 		const elementId = element.attr('mvct-id');
 		if (!elementId) {
 			element.attr('mvct-id', window.crypto.randomUUID());
@@ -201,6 +238,8 @@ export const useEditor = defineStore('editor', () => {
 			mvctElement.addClass('mvct-focus');
 
 			draggedElement.value = mvctElement;
+
+			inspectorLastSelectedColor.value = mvctElement.fill();
 
 			console.log('Pointerdown on:', mouseEvent.target);
 
@@ -424,9 +463,13 @@ export const useEditor = defineStore('editor', () => {
 	}
 
 	function changeColor(color: string) {
-		if (!activeElement.value) return;
+		if (!activeElement.value) {
+			console.log('No active element, changing canvas color.');
+			rectBg.value?.fill(color);
+		} else activeElement.value.fill(color);
 
-		activeElement.value.fill(color);
+		inspectorLastSelectedColor.value = color;
+		saveFunction.value();
 	}
 
 	function setCssTheme(css: string) {
@@ -457,6 +500,8 @@ export const useEditor = defineStore('editor', () => {
 		openColorPickerFunction,
 		openFontFunction,
 		styleBlock,
+		inspectorLastSelectedColor,
+		rectBg,
 		initialize,
 		createShape,
 		createText,
