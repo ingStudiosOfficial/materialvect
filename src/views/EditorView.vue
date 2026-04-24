@@ -20,6 +20,7 @@ import ColorPicker from '@/components/ColorPicker.vue';
 import { useFileSystem } from '@/stores/filesys';
 import { useMobile } from '@/composables/mobile';
 import FontPicker from '@/components/FontPicker.vue';
+import { exportAsMvct, exportAsSvg } from '@/utils/export';
 
 const editorStore = useEditor();
 const fileSystemStore = useFileSystem();
@@ -156,7 +157,7 @@ onUnmounted(() => {
 <template>
 	<div v-if="vectorFile !== null" class="editor-wrapper">
 		<m3e-app-bar class="app-bar">
-			<div slot="title" class="app-bar-title">
+			<div slot="title" class="app-bar-actions">
 				<button class="mvct-logo" @click="router.push('/')">
 					<img src="/materialvect_logo_trans_full.png" class="mvct-logo-image" />
 				</button>
@@ -223,6 +224,23 @@ onUnmounted(() => {
 					<m3e-menu-item @click="openThemeDialog()">
 						<m3e-icon slot="icon" name="colors"></m3e-icon>
 						Edit theme
+					</m3e-menu-item>
+				</m3e-menu>
+			</div>
+			<div slot="trailing" class="app-bar-actions" style="margin-right: 10px">
+				<m3e-button variant="tonal">
+					<m3e-icon slot="icon" name="share"></m3e-icon>
+					<m3e-menu-trigger for="export-menu">Export</m3e-menu-trigger>
+				</m3e-button>
+
+				<m3e-menu id="export-menu">
+					<m3e-menu-item @click="exportAsMvct(vectorFile)">
+						<m3e-icon slot="icon" name="folder_zip"></m3e-icon>
+						Materialvect Vector (.mvct)
+					</m3e-menu-item>
+					<m3e-menu-item @click="exportAsSvg(vectorFile)">
+						<m3e-icon slot="icon" name="code_xml"></m3e-icon>
+						Scalable Vector Graphics (.svg)
 					</m3e-menu-item>
 				</m3e-menu>
 			</div>
@@ -330,7 +348,7 @@ onUnmounted(() => {
 	text-align: center;
 }
 
-.app-bar-title {
+.app-bar-actions {
 	display: flex;
 	flex-direction: row;
 	align-items: center;

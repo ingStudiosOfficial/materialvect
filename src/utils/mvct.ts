@@ -78,7 +78,7 @@ export async function mvctToObject(mvctFile: File): Promise<Mvct> {
 	};
 }
 
-export async function objectToMvct(mvctObject: Mvct): Promise<Blob> {
+export async function objectToMvct(mvctObject: Mvct): Promise<File> {
 	const zip = new JSZip();
 
 	zip.file('main.svg', mvctObject.svg);
@@ -103,5 +103,5 @@ export async function objectToMvct(mvctObject: Mvct): Promise<Blob> {
 		fonts?.file(font.name, font);
 	}
 
-	return await zip.generateAsync({ type: 'blob', mimeType: 'vnd.mvct+zip' });
+	return (await zip.generateAsync({ type: 'blob', mimeType: 'vnd.mvct+zip' })) as File;
 }

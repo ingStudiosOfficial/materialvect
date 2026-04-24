@@ -53,9 +53,9 @@ watchEffect(async (onCleanup) => {
 			createdUrls.add(url);
 
 			const fontFace = `
-${fontIdentifier}
+\n${fontIdentifier}
 @font-face {
-    font-family: ${font.names.fontFamily.en};
+    font-family: '${font.names.fontFamily.en}';
     src: url(${url});
     font-weight: ${font.tables.os2?.usWeightClass};
     font-style: ${font.names.fontSubfamily.en};
@@ -183,9 +183,9 @@ async function applyFont() {
 			const url = URL.createObjectURL(blob);
 
 			const fontFace = `
-${fontIdentifier}
+\n${fontIdentifier}
 @font-face {
-    font-family: ${selectedFont.value.names.fontFamily.en};
+    font-family: '${selectedFont.value.names.fontFamily.en}';
     src: url(${url});
     font-weight: ${selectedFont.value.tables.os2?.usWeightClass};
     font-style: ${selectedFont.value.names.fontSubfamily.en};
