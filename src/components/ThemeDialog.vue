@@ -13,6 +13,7 @@ const dialogRef = useTemplateRef<M3eDialogElement>('themeDialog');
 const seedColor = ref<string>('#ffffff');
 
 function openThemeDialog() {
+	if (editorStore.vector) seedColor.value = editorStore.vector.metadata.seedColor;
 	dialogRef.value?.show();
 }
 
@@ -25,6 +26,8 @@ function updateSeedColor(event: InputEvent) {
 }
 
 function generateThemeColor() {
+	if (editorStore.vector) editorStore.vector.metadata.seedColor = seedColor.value;
+
 	const lightTheme = generateTheme(seedColor.value);
 
 	editorStore.setMvctTheme(lightTheme);

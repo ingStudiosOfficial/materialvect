@@ -9,8 +9,10 @@ import { M3eSnackbar } from '@m3e/web/snackbar';
 import '@m3e/web/button';
 import '@m3e/web/menu';
 import '@m3e/web/icon';
+import '@m3e/web/icon-button';
+import '@m3e/web/tooltip';
 import '@m3e/web/split-pane';
-import { nextTick, onMounted, onUnmounted, ref, toRaw, useTemplateRef } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, toRaw, useTemplateRef } from 'vue';
 import EditorArea from '@/components/EditorArea.vue';
 import ElementInspector from '@/components/ElementInspector.vue';
 import router from '@/router';
@@ -21,6 +23,7 @@ import { useFileSystem } from '@/stores/filesys';
 import { useMobile } from '@/composables/mobile';
 import FontPicker from '@/components/FontPicker.vue';
 import { exportAsMvct, exportAsSvg } from '@/utils/export';
+import { format, isToday, isYesterday } from 'date-fns';
 
 const editorStore = useEditor();
 const fileSystemStore = useFileSystem();
@@ -32,6 +35,7 @@ const vectorFile = ref<Mvct | null>(null);
 const vectorNameInput = useTemplateRef<HTMLInputElement>('vectorNameInput');
 const needAccess = ref<boolean>(false);
 const hiddenImageInput = useTemplateRef<HTMLInputElement>('hiddenImageInput');
+const isSaving = ref<boolean>(false);
 
 async function updateName() {
 	await updateVector();
@@ -49,6 +53,7 @@ async function updateVector(notBackgroundSave: boolean = false) {
 	if (!vectorFile.value) return;
 
 	try {
+		isSaving.value = true;
 		vectorFile.value.metadata.modified = Date.now();
 		const cleanData = { ...toRaw(vectorFile.value) };
 		console.log('Clean data fonts:', cleanData.assets.fonts);
@@ -71,6 +76,8 @@ async function updateVector(notBackgroundSave: boolean = false) {
 				}
 			}
 		}
+	} finally {
+		isSaving.value = false;
 	}
 }
 
@@ -124,6 +131,13 @@ function onKeyUp(event: KeyboardEvent) {
 	}
 }
 
+const lastSaved = computed(() => {
+	if (isToday(editorStore.lastSaved)) return format(editorStore.lastSaved, "'today at' h:mm a");
+	else if (isYesterday(editorStore.lastSaved))
+		return format(editorStore.lastSaved, "'yesterday at' h:mm a");
+	else return format(editorStore.lastSaved, 'do MMMM yyyy');
+});
+
 onMounted(async () => {
 	const url = new URL(window.location.href);
 	const id = url.pathname.split('/').filter(Boolean).at(-1);
@@ -169,15 +183,17 @@ onUnmounted(() => {
 					@change="updateName()"
 				/>
 
-				<m3e-button variant="text">
-					<m3e-menu-trigger for="file-menu">File</m3e-menu-trigger>
-				</m3e-button>
-				<m3e-button variant="text">
-					<m3e-menu-trigger for="insert-menu">Insert</m3e-menu-trigger>
-				</m3e-button>
-				<m3e-button variant="text">
-					<m3e-menu-trigger for="theme-menu">Theme</m3e-menu-trigger>
-				</m3e-button>
+				<div class="primary-actions">
+					<m3e-button variant="text">
+						<m3e-menu-trigger for="file-menu">File</m3e-menu-trigger>
+					</m3e-button>
+					<m3e-button variant="text">
+						<m3e-menu-trigger for="insert-menu">Insert</m3e-menu-trigger>
+					</m3e-button>
+					<m3e-button variant="text">
+						<m3e-menu-trigger for="theme-menu">Theme</m3e-menu-trigger>
+					</m3e-button>
+				</div>
 
 				<m3e-menu id="file-menu">
 					<m3e-menu-item @click="navigateToHome()">
@@ -226,6 +242,26 @@ onUnmounted(() => {
 						Edit theme
 					</m3e-menu-item>
 				</m3e-menu>
+
+				<m3e-icon-button v-show="!isSaving" id="save-status">
+					<m3e-icon name="folder_check"></m3e-icon>
+				</m3e-icon-button>
+
+				<div class="saving" v-show="isSaving">
+					<m3e-icon-button id="saving-status">
+						<m3e-icon name="autorenew"></m3e-icon>
+					</m3e-icon-button>
+					<p class="saving-text">Saving...</p>
+				</div>
+
+				<m3e-rich-tooltip for="save-status">
+					<span slot="subhead">Last saved {{ lastSaved }}</span>
+					This vector is stored locally.
+				</m3e-rich-tooltip>
+				<m3e-rich-tooltip for="saving-status">
+					<span slot="subhead">Saving vector</span>
+					This vector is stored locally.
+				</m3e-rich-tooltip>
 			</div>
 			<div slot="trailing" class="app-bar-actions" style="margin-right: 10px">
 				<m3e-button variant="tonal">
@@ -358,5 +394,24 @@ onUnmounted(() => {
 
 .hidden-image-input {
 	display: none;
+}
+
+.saving-text {
+	font-size: 0.8rem;
+}
+
+.saving {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 2px;
+}
+
+.primary-actions {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: flex-start;
 }
 </style>

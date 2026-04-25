@@ -19,6 +19,7 @@
     "@material/material-color-utilities": "^0.4.0",
     "@svgdotjs/svg.js": "^3.2.5",
     "@types/mime-types": "^3.0.1",
+    "date-fns": "^4.1.0",
     "idb": "^8.0.3",
     "jszip": "^3.10.1",
     "mime-types": "^3.0.2",

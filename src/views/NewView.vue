@@ -36,6 +36,7 @@ onMounted(async () => {
 	const created = Date.now();
 	const modified = Date.now();
 	const synced = false;
+	const seedColor = '#CBA9FF';
 
 	const isNum = (val: string) => !isNaN(Number(val)) && val.trim() !== '';
 
@@ -55,9 +56,10 @@ onMounted(async () => {
 		created,
 		modified,
 		synced,
+		seedColor,
 	};
 
-	const theme = generateTheme('#CBA9FF');
+	const theme = generateTheme(seedColor);
 
 	const vectorFile: Mvct = {
 		metadata: vectorProperties,

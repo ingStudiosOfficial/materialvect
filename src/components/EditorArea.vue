@@ -47,6 +47,8 @@ function emitVectorData() {
 	newMvct.svg = svgCanvasToSave.node.innerHTML;
 	newMvct.assets.fonts = inspectorStore.vector.assets.fonts;
 
+	inspectorStore.lastSaved = new Date();
+
 	emit('change', newMvct);
 }
 

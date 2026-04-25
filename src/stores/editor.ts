@@ -32,6 +32,7 @@ export const useEditor = defineStore('editor', () => {
 	const openFontFunction = ref<(() => void) | null>(null);
 	const rectBg = ref<Rect | null>(null);
 	const inspectorLastSelectedColor = ref<string>('var(--md-sys-color-surface-container-high)');
+	const lastSaved = ref<Date>(new Date(vector.value?.metadata.modified || 0));
 
 	let isDragging = false;
 	let startPoint = { x: 0, y: 0 };
@@ -171,6 +172,8 @@ export const useEditor = defineStore('editor', () => {
 		const foundElements = svgVector.find('*');
 
 		registerElements(foundElements);
+
+		lastSaved.value = new Date();
 
 		saveFunction.value = save;
 	}
@@ -505,6 +508,7 @@ export const useEditor = defineStore('editor', () => {
 		styleBlock,
 		inspectorLastSelectedColor,
 		rectBg,
+		lastSaved,
 		initialize,
 		createShape,
 		createText,

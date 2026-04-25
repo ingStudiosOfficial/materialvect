@@ -6,4 +6,5 @@ export interface VectorProperties {
 	width: number;
 	height: number;
 	synced: boolean;
+	seedColor: string;
 }

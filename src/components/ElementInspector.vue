@@ -92,16 +92,18 @@ onMounted(async () => {
 			<p>Rotation</p>
 			<input class="inspector-input" v-model.number="activeElementProperties.rotation" />
 
-			<p>Color</p>
-			<button
-				class="color-picker-btn"
-				:style="{
-					backgroundColor: editorStore.inspectorLastSelectedColor,
-				}"
-				@click="openColorPicker()"
-			>
-				Choose color
-			</button>
+			<div v-if="activeElementProperties.type !== 'image'" class="conditional-container">
+				<p>Color</p>
+				<button
+					class="color-picker-btn"
+					:style="{
+						backgroundColor: editorStore.inspectorLastSelectedColor,
+					}"
+					@click="openColorPicker()"
+				>
+					Choose color
+				</button>
+			</div>
 
 			<div v-if="activeElementProperties.type === 'text'" class="conditional-container">
 				<p>Font</p>

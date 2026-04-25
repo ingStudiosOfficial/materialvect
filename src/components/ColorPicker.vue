@@ -6,7 +6,7 @@ import '@m3e/web/option';
 import { M3eDialogElement } from '@m3e/web/dialog';
 import { nextTick, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { useEditor } from '@/stores/editor';
-import { keyToCssVar } from '@/utils/theme';
+import { cssVarToKey, keyToCssVar } from '@/utils/theme';
 import type { MvctTheme } from '@/interfaces/Theme';
 import { M3eSelectElement } from '@m3e/web/select';
 import '@m3e/web/button';
@@ -30,6 +30,17 @@ const customColor = ref<string>('#ffffff');
 let pickingToken = false;
 
 function openColorPicker() {
+	const elementColor = editorStore.activeElement?.fill() || 'var(--mvct-color-primary-container)';
+	selectedColor.value = elementColor;
+
+	if (elementColor.includes('var(--mvct-color-') && vector.value) {
+		const key = cssVarToKey(elementColor);
+		const colorHex = hexFromArgb(vector.value.theme[key]);
+		customColor.value = colorHex;
+	} else {
+		customColor.value = elementColor;
+	}
+
 	dialogRef.value?.show();
 }
 

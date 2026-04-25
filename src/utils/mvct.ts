@@ -65,6 +65,11 @@ export async function mvctToObject(mvctFile: File): Promise<Mvct> {
 	const imageFiles = await Promise.all(imagePromises);
 	const fontFiles = await Promise.all(fontPromises);
 
+	// Compatability with older versions
+	if (!vectorProperties.seedColor) {
+		vectorProperties.seedColor = '#CBA9FF';
+	}
+
 	return {
 		metadata: vectorProperties,
 		svg: svgContent,
