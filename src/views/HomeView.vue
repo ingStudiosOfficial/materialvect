@@ -41,6 +41,9 @@ async function onVectorUpload() {
 		await upsertVector(mvctObject.metadata);
 		await vectorsStore.refreshVectors();
 		await vectorsStore.refreshVectorProperties();
+		M3eSnackbar.open(`Successfully loaded '${mvctObject.metadata.name}'`, {
+			duration: 4000,
+		});
 	} catch (error) {
 		if ((error as Error).message === 'Directory handle missing') {
 			needsDirectory = true;
