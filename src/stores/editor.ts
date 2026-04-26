@@ -6,6 +6,7 @@ import { List, Rect, Svg, SVG, Text, type Element as SvgElement } from '@svgdotj
 import type { Mvct } from '@/interfaces/Mvct';
 import type { MvctElementType } from '@/interfaces/ElementType';
 import type { MvctTheme } from '@/interfaces/Theme';
+import { extension } from 'mime-types';
 
 export const useEditor = defineStore('editor', () => {
 	const activeElement = ref<MvctElement | null>(null);
@@ -319,6 +320,8 @@ export const useEditor = defineStore('editor', () => {
 						input.blur();
 					}
 				};
+
+				saveFunction.value();
 			});
 		}
 	}
@@ -385,10 +388,10 @@ export const useEditor = defineStore('editor', () => {
 		saveFunction.value();
 	}
 
-	function createText() {
+	function createText(content?: string) {
 		if (!svgCanvas.value || !vector.value) return;
 
-		const text = svgCanvas.value.text('Text');
+		const text = svgCanvas.value.text(content || 'Text');
 		text.attr({
 			fill: 'var(--mvct-color-primary-container)',
 			x: vector.value.metadata.width / 2,
@@ -493,6 +496,34 @@ export const useEditor = defineStore('editor', () => {
 		saveFunction.value();
 	}
 
+	async function onPaste() {
+		try {
+			const clipItem = (await navigator.clipboard.read())[0];
+			if (!clipItem) return;
+
+			const imageType = clipItem.types.find((type) => type.includes('image/'));
+			const textType = clipItem.types.find((type) => type === 'text/plain');
+
+			if (imageType) {
+				const blob = await clipItem.getType(imageType);
+				const newFile = new File([blob], `${Date.now()}_upload.${extension(imageType)}`, {
+					type: imageType,
+					lastModified: Date.now(),
+				});
+				uploadImage(newFile);
+			} else if (textType) {
+				const blob = await clipItem.getType(textType);
+				const text = await blob.text();
+				createText(text);
+			}
+		} catch (error) {
+			console.error('Error while reading clipboard:', error);
+			M3eSnackbar.open((error as Error).message, {
+				duration: 4000,
+			});
+		}
+	}
+
 	return {
 		svgCanvas,
 		isDragging,
@@ -518,5 +549,6 @@ export const useEditor = defineStore('editor', () => {
 		changeColor,
 		setCssTheme,
 		setMvctTheme,
+		onPaste,
 	};
 });

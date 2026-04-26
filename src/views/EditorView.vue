@@ -22,7 +22,7 @@ import ColorPicker from '@/components/ColorPicker.vue';
 import { useFileSystem } from '@/stores/filesys';
 import { useMobile } from '@/composables/mobile';
 import FontPicker from '@/components/FontPicker.vue';
-import { exportAsMvct, exportAsSvg } from '@/utils/export';
+import { exportAsMvct, exportAsPng, exportAsSvg } from '@/utils/export';
 import { format, isToday, isYesterday } from 'date-fns';
 
 const editorStore = useEditor();
@@ -124,10 +124,14 @@ function handleImageUpload() {
 	editorStore.uploadImage(imageFile);
 }
 
-function onKeyUp(event: KeyboardEvent) {
-	if (event.ctrlKey && event.key === 's') {
+async function onKeyUp(event: KeyboardEvent) {
+	const eventKey = event.key.toLowerCase();
+
+	if ((event.ctrlKey || event.metaKey) && eventKey === 's') {
 		event.preventDefault();
 		updateVectorSb();
+	} else if ((event.ctrlKey || event.metaKey) && eventKey === 'v') {
+		editorStore.onPaste();
 	}
 }
 
@@ -160,11 +164,11 @@ onMounted(async () => {
 
 	document.title = `${vectorFile.value?.metadata.name || 'Untitled Vector'} | Materialvect`;
 
-	document.addEventListener('keyup', onKeyUp);
+	document.addEventListener('keydown', onKeyUp);
 });
 
 onUnmounted(() => {
-	document.removeEventListener('keyup', onKeyUp);
+	document.removeEventListener('keydown', onKeyUp);
 });
 </script>
 
@@ -277,6 +281,10 @@ onUnmounted(() => {
 					<m3e-menu-item @click="exportAsSvg(vectorFile)">
 						<m3e-icon slot="icon" name="code_xml"></m3e-icon>
 						Scalable Vector Graphics (.svg)
+					</m3e-menu-item>
+					<m3e-menu-item @click="exportAsPng(vectorFile)">
+						<m3e-icon slot="icon" name="file_png"></m3e-icon>
+						Portable Network Graphics (.png)
 					</m3e-menu-item>
 				</m3e-menu>
 			</div>

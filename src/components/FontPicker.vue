@@ -25,6 +25,7 @@ const localFonts = ref<FontData[]>([]);
 const localFontsFetchSuccess = ref<boolean>(false);
 const existingFontSelect = useTemplateRef<M3eSelectElement>('existingFontSelect');
 const localFontSelect = useTemplateRef<M3eSelectElement>('localFontSelect');
+const fontUpload = useTemplateRef<HTMLInputElement>('fontUpload');
 
 const fontTypes: { postscriptName: string; mimeType: string }[] = [];
 const createdUrls = new Set<string>();
@@ -118,7 +119,7 @@ async function selectLocalFont() {
 
 		selectedFont.value = parsedFont;
 		if (existingFontSelect.value?.value) existingFontSelect.value.clear();
-		addLocalFont(parsedFont);
+		addNewFont(parsedFont);
 	} catch (error) {
 		console.error('Error while selecting local font:', error);
 		M3eSnackbar.open((error as Error).message, {
@@ -127,8 +128,8 @@ async function selectLocalFont() {
 	}
 }
 
-function addLocalFont(parsedFont: Font) {
-	console.log('Attempting to add local font:', parsedFont);
+function addNewFont(parsedFont: Font) {
+	console.log('Attempting to add new font:', parsedFont);
 
 	if (
 		fonts.value
@@ -155,6 +156,30 @@ function addLocalFont(parsedFont: Font) {
 	vector.value?.assets.fonts.push(file);
 
 	console.log('Added local font:', file.name, vector.value?.assets.fonts);
+}
+
+async function onFontUpload() {
+	const file = fontUpload.value?.files?.[0];
+	if (!file) return;
+
+	try {
+		const buffer = await file.arrayBuffer();
+		const parsedFont = parse(buffer);
+
+		const fontPostscript = parsedFont.names.postScriptName.en;
+
+		const mimeType = file.type;
+		fontTypes.push({ postscriptName: fontPostscript as string, mimeType: mimeType });
+
+		selectedFont.value = parsedFont;
+
+		addNewFont(parsedFont);
+	} catch (error) {
+		console.error('Error while parsing uploaded font:', error);
+		M3eSnackbar.open((error as Error).message, {
+			duration: 4000,
+		});
+	}
 }
 
 async function applyFont() {
@@ -249,6 +274,15 @@ onMounted(() => {
 			<m3e-button v-else variant="tonal" @click="fetchLocalFonts()"
 				>Fetch local fonts</m3e-button
 			>
+
+			<m3e-button variant="tonal" @click="fontUpload?.click()">Upload font</m3e-button>
+			<input
+				ref="fontUpload"
+				type="file"
+				accept=".ttf, .otf, .woff, .woff2, font/ttf, font/otf, font/woff, font/woff2"
+				style="display: none"
+				@input="onFontUpload()"
+			/>
 		</div>
 		<div slot="actions" class="actions" end>
 			<p class="selected-font-name">
