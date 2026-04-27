@@ -16,8 +16,10 @@ import { useVectors } from '@/stores/vectors';
 import { upsertVector } from '@/db';
 import type { M3eDialogElement } from '@m3e/web/dialog';
 import router from '@/router';
+import { useExternal } from '@/stores/external';
 
 const vectorsStore = useVectors();
+const fileStore = useExternal();
 
 const hiddenUpload = useTemplateRef<HTMLInputElement>('hiddenUpload');
 const isBeta = ref<boolean>(import.meta.env.VITE_IS_BETA === 'true');
@@ -37,6 +39,7 @@ async function onVectorUpload() {
 	try {
 		const mvctObject = await mvctToObject(file);
 		if (needsDirectory) await selectProjectFolder();
+
 		await saveProjectToDisk(mvctObject);
 		await upsertVector(mvctObject.metadata);
 		await vectorsStore.refreshVectors();
@@ -54,6 +57,27 @@ async function onVectorUpload() {
 			});
 		}
 	}
+}
+
+async function openVector() {
+	if (!('showOpenFilePicker' in window)) return;
+
+	const [fileHandle] = await window.showOpenFilePicker({
+		types: [
+			{
+				description: 'Materialvect Vector',
+				accept: { 'application/vnd.mvct+zip': '.mvct' },
+			},
+		],
+		excludeAcceptAllOption: true,
+		multiple: false,
+	});
+
+	const file = await fileHandle.getFile();
+	const vector = await mvctToObject(file);
+	await fileStore.initialize(vector, fileHandle);
+
+	router.push({ name: 'editor', query: { local: 'true' }, params: { id: vector.metadata.id } });
 }
 </script>
 
@@ -95,6 +119,10 @@ async function onVectorUpload() {
 			<m3e-fab-menu-item @click="hiddenUpload?.click()">
 				<m3e-icon slot="icon" name="upload_file"></m3e-icon>
 				Upload
+			</m3e-fab-menu-item>
+			<m3e-fab-menu-item @click="openVector()">
+				<m3e-icon slot="icon" name="file_open"></m3e-icon>
+				Open
 			</m3e-fab-menu-item>
 		</m3e-fab-menu>
 		<input

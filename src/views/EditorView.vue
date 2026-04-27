@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { upsertVector } from '@/db';
+import { getExternalHandle, upsertVector } from '@/db';
 import type { Mvct } from '@/interfaces/Mvct';
 import { fetchProjectFromDisk, saveProjectToDisk, verifyAccessAndFetch } from '@/utils/filesys';
 import '@m3e/web/app-bar';
@@ -24,11 +24,17 @@ import { useMobile } from '@/composables/mobile';
 import FontPicker from '@/components/FontPicker.vue';
 import { exportAsMvct, exportAsPng, exportAsSvg } from '@/utils/export';
 import { format, isToday, isYesterday } from 'date-fns';
+import { useRoute } from 'vue-router';
+import { useExternal } from '@/stores/external';
+import { mvctToObject } from '@/utils/mvct';
 
 const editorStore = useEditor();
 const fileSystemStore = useFileSystem();
+const externalStore = useExternal();
 
 const { isMobile } = useMobile();
+
+const route = useRoute();
 
 const vectorId = ref<string>('');
 const vectorFile = ref<Mvct | null>(null);
@@ -36,6 +42,7 @@ const vectorNameInput = useTemplateRef<HTMLInputElement>('vectorNameInput');
 const needAccess = ref<boolean>(false);
 const hiddenImageInput = useTemplateRef<HTMLInputElement>('hiddenImageInput');
 const isSaving = ref<boolean>(false);
+const editingExternal = ref<boolean>(false);
 
 async function updateName() {
 	await updateVector();
@@ -56,9 +63,14 @@ async function updateVector(notBackgroundSave: boolean = false) {
 		isSaving.value = true;
 		vectorFile.value.metadata.modified = Date.now();
 		const cleanData = { ...toRaw(vectorFile.value) };
-		console.log('Clean data fonts:', cleanData.assets.fonts);
-		await saveProjectToDisk(cleanData);
-		await upsertVector(cleanData.metadata);
+
+		if (editingExternal.value) {
+			await externalStore.saveVector(vectorFile.value);
+		} else {
+			await saveProjectToDisk(cleanData);
+			await upsertVector(cleanData.metadata);
+		}
+
 		document.title = `${cleanData.metadata.name} | Materialvect`;
 		console.log('Successfully saved vector.');
 	} catch (error) {
@@ -143,8 +155,39 @@ const lastSaved = computed(() => {
 });
 
 onMounted(async () => {
-	const url = new URL(window.location.href);
-	const id = url.pathname.split('/').filter(Boolean).at(-1);
+	if (route.query.local) {
+		let file = externalStore.vector;
+		if (!file) {
+			console.log('File is null.');
+
+			const id = route.params.id as string | undefined;
+			if (!id) {
+				console.error('ID is undefined.');
+				return;
+			}
+
+			const handle = (await getExternalHandle(id))?.handle;
+			if (!handle) {
+				console.error('Failed to get external handle.');
+				return;
+			}
+
+			console.log('Found handle:', handle);
+
+			const vectorFile = await handle.getFile();
+			file = await mvctToObject(vectorFile);
+
+			await externalStore.initialize(file, handle);
+		}
+
+		editingExternal.value = true;
+
+		vectorFile.value = file;
+
+		return;
+	}
+
+	const id = route.params.id as string | undefined;
 	if (!id) return;
 	vectorId.value = id;
 

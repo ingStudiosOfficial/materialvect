@@ -8,6 +8,9 @@ import { generateCss, generateTheme } from '@/utils/theme';
 import '@m3e/web/loading-indicator';
 import { M3eSnackbar } from '@m3e/web/snackbar';
 import { onMounted, ref, toRaw } from 'vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
 
 const needAccess = ref<boolean>(false);
 const projectToCreate = ref<Mvct | null>(null);
@@ -27,12 +30,10 @@ async function retryCreateProject() {
 }
 
 onMounted(async () => {
-	const urlParams = new URLSearchParams(window.location.search);
-
 	const id = window.crypto.randomUUID();
-	const name = decodeURIComponent(urlParams.get('name') || 'Untitled%20Vector');
-	const width = decodeURIComponent(urlParams.get('width') || '500');
-	const height = decodeURIComponent(urlParams.get('height') || '500');
+	const name = (route.query.name as string | undefined) || 'Untitled Vector';
+	const width = (route.query.width as string | undefined) || '500';
+	const height = (route.query.height as string | undefined) || '500';
 	const created = Date.now();
 	const modified = Date.now();
 	const synced = false;

@@ -108,5 +108,8 @@ export async function objectToMvct(mvctObject: Mvct): Promise<File> {
 		fonts?.file(font.name, font);
 	}
 
-	return (await zip.generateAsync({ type: 'blob', mimeType: 'vnd.mvct+zip' })) as File;
+	return (await zip.generateAsync({
+		type: 'blob',
+		mimeType: 'application/vnd.mvct+zip',
+	})) as File;
 }

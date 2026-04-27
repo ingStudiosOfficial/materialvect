@@ -17,6 +17,11 @@ async function getDb(): Promise<IDBPDatabase<unknown>> {
 					if (!db.objectStoreNames.contains('handle')) {
 						db.createObjectStore('handle');
 					}
+
+				case 2:
+					if (!db.objectStoreNames.contains('external')) {
+						db.createObjectStore('external', { keyPath: 'id' });
+					}
 			}
 		},
 	});
@@ -54,4 +59,17 @@ export async function getDirHandle(): Promise<FileSystemDirectoryHandle | null> 
 export async function deleteVector(id: string) {
 	const db = await getDb();
 	await db.delete('vectors', id);
+}
+
+export async function saveExternalHandle(handle: FileSystemFileHandle, id: string) {
+	const db = await getDb();
+	await db.put('external', { id, handle });
+}
+
+export async function getExternalHandle(
+	id: string,
+): Promise<{ id: string; handle: FileSystemFileHandle } | null> {
+	const db = await getDb();
+	const handle = await db.get('external', id);
+	return handle || null;
 }
