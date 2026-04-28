@@ -15,9 +15,14 @@ export async function selectProjectFolder(): Promise<Mvct[]> {
 
 	for await (const entry of dirHandle.values()) {
 		if (entry.kind === 'file' && entry.name.endsWith('.mvct')) {
-			const file = await entry.getFile();
-			const project = await mvctToObject(file);
-			foundProjects.push(project);
+			try {
+				const file = await entry.getFile();
+				const project = await mvctToObject(file);
+				foundProjects.push(project);
+			} catch (error) {
+				console.error('Error while fetching file:', error);
+				continue;
+			}
 		}
 	}
 
@@ -52,9 +57,14 @@ export async function fetchProjectsFromDisk(): Promise<Mvct[]> {
 
 	for await (const entry of dirHandle.values()) {
 		if (entry.kind === 'file' && entry.name.endsWith('.mvct')) {
-			const file = await entry.getFile();
-			const project = await mvctToObject(file);
-			foundProjects.push(project);
+			try {
+				const file = await entry.getFile();
+				const project = await mvctToObject(file);
+				foundProjects.push(project);
+			} catch (error) {
+				console.error('Error while fetching file:', error);
+				continue;
+			}
 		}
 	}
 

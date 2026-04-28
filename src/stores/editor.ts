@@ -463,7 +463,14 @@ export const useEditor = defineStore('editor', () => {
 		newElement.attr({
 			'mvct-id': window.crypto.randomUUID(),
 		});
+		newElement.dx(10);
+		newElement.dy(10);
 		console.log('New element:', newElement);
+
+		svgCanvas.value?.add(newElement);
+
+		clearActiveElement();
+		setActiveElement(newElement);
 
 		registerElement(newElement);
 	}

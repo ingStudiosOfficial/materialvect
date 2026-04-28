@@ -6,6 +6,8 @@ import '@m3e/web/icon';
 import '@m3e/web/chips';
 import '@m3e/web/dialog';
 import '@m3e/web/button';
+import '@m3e/web/icon-button';
+import '@m3e/web/tooltip';
 import { ref, useTemplateRef } from 'vue';
 import HomeTemplates from '@/components/HomeTemplates.vue';
 import RecentVectors from '@/components/RecentVectors.vue';
@@ -13,13 +15,15 @@ import { createNewVector } from '@/utils/vector';
 import { saveProjectToDisk, selectProjectFolder } from '@/utils/filesys';
 import { mvctToObject } from '@/utils/mvct';
 import { useVectors } from '@/stores/vectors';
-import { upsertVector } from '@/db';
+import { saveUserData, upsertVector } from '@/db';
 import type { M3eDialogElement } from '@m3e/web/dialog';
 import router from '@/router';
 import { useExternal } from '@/stores/external';
+import { useGoogle } from '@/composables/google';
 
 const vectorsStore = useVectors();
 const fileStore = useExternal();
+const googleStore = useGoogle();
 
 const hiddenUpload = useTemplateRef<HTMLInputElement>('hiddenUpload');
 const isBeta = ref<boolean>(import.meta.env.VITE_IS_BETA === 'true');
@@ -79,6 +83,29 @@ async function openVector() {
 
 	router.push({ name: 'editor', query: { local: 'true' }, params: { id: vector.metadata.id } });
 }
+
+function triggerGoogleLogin() {
+	if (typeof google === 'undefined') return;
+
+	const client = google.accounts.oauth2.initTokenClient({
+		client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+		scope: 'openid profile email',
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		callback: async (tokenResponse: any) => {
+			const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+				headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+			});
+			const payload = await res.json();
+			googleStore.user.value = {
+				name: payload.name,
+				pfp: payload.picture,
+			};
+			saveUserData({ name: payload.name, pfp: payload.picture });
+		},
+	});
+
+	client.requestAccessToken();
+}
 </script>
 
 <template>
@@ -90,6 +117,23 @@ async function openVector() {
 				</button>
 				<span>Materialvect</span>
 				<m3e-chip v-if="isBeta" style="--m3e-chip-container-shape: 25px">BETA</m3e-chip>
+			</div>
+			<div slot="trailing" class="app-bar-title" style="margin-right: 10px">
+				<div v-if="!googleStore.user.value">
+					<m3e-button variant="tonal" id="sign-in-google" @click="triggerGoogleLogin()">
+						<m3e-icon slot="icon" name="account_circle"></m3e-icon>
+						Sign in
+					</m3e-button>
+					<m3e-tooltip for="sign-in-google">
+						Sign in with Google to backup your vectors
+					</m3e-tooltip>
+				</div>
+				<div v-else>
+					<m3e-icon-button id="profile-button">
+						<img class="pfp-image" :src="googleStore.user.value.pfp" />
+					</m3e-icon-button>
+					<m3e-tooltip for="profile-button">Google Account and backup</m3e-tooltip>
+				</div>
 			</div>
 		</m3e-app-bar>
 		<m3e-fab size="large" class="create-fab">
@@ -182,5 +226,10 @@ async function openVector() {
 	align-items: center;
 	justify-content: flex-start;
 	gap: 10px;
+}
+
+.pfp-image {
+	height: 4svh;
+	border-radius: 50%;
 }
 </style>

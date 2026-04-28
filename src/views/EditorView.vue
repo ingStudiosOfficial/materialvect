@@ -82,6 +82,7 @@ async function updateVector(notBackgroundSave: boolean = false) {
 			if (saveError.name === 'NotAllowedError') {
 				if (fileSystemStore.openFileDialogFunction) {
 					fileSystemStore.onAllowFunction = updateVector;
+					console.log('Set on allow function:', fileSystemStore.onAllowFunction);
 					fileSystemStore.allowMessage =
 						'Materialvect needs you to allow us to access your file system to save your vector.';
 					fileSystemStore.openFileDialogFunction();
@@ -94,7 +95,7 @@ async function updateVector(notBackgroundSave: boolean = false) {
 }
 
 async function updateVectorSb() {
-	await updateVector();
+	await updateVector(true);
 	M3eSnackbar.open('Successfully saved vector', {
 		duration: 4000,
 	});
@@ -388,6 +389,7 @@ onUnmounted(() => {
 
 .app-bar {
 	flex-shrink: 0;
+	box-sizing: border-box;
 }
 
 .editor-components {

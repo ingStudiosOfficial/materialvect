@@ -4,6 +4,8 @@ import '@m3e/web/dialog';
 import '@m3e/web/button';
 import { M3eDialogElement } from '@m3e/web/dialog';
 import { onMounted, useTemplateRef } from 'vue';
+import { getDirHandle } from '@/db';
+import { M3eSnackbar } from '@m3e/web/snackbar';
 
 const fileSystemStore = useFileSystem();
 
@@ -15,10 +17,29 @@ function openDialog() {
 	promptDialog.value.show();
 }
 
-function onAllow() {
+async function onAllow() {
 	if (!fileSystemStore.onAllowFunction) return;
 
-	fileSystemStore.onAllowFunction();
+	const handle = await getDirHandle();
+
+	if (handle) {
+		const status = await handle.requestPermission({ mode: 'readwrite' });
+
+		if (status === 'granted') {
+			console.log('Allow function:', fileSystemStore.onAllowFunction);
+			await fileSystemStore.onAllowFunction();
+			promptDialog.value?.hide();
+		} else {
+			console.error('User denied native permission prompt');
+			M3eSnackbar.open('Access denied', {
+				duration: 4000,
+			});
+		}
+	} else {
+		M3eSnackbar.open('Directory handle missing', {
+			duration: 4000,
+		});
+	}
 }
 
 function onClose() {
@@ -42,9 +63,7 @@ onMounted(() => {
 		</p>
 		<div slot="actions" end>
 			<m3e-button variant="text"><m3e-dialog-action>Deny</m3e-dialog-action></m3e-button>
-			<m3e-button variant="filled" @click="onAllow">
-				<m3e-dialog-action>Allow</m3e-dialog-action>
-			</m3e-button>
+			<m3e-button variant="filled" @click="onAllow">Allow</m3e-button>
 		</div>
 	</m3e-dialog>
 </template>

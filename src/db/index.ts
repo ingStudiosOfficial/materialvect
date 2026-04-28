@@ -1,3 +1,4 @@
+import type { UserData } from '@/interfaces/UserData';
 import type { VectorProperties } from '@/interfaces/VectorProperties';
 import { openDB, type IDBPDatabase } from 'idb';
 
@@ -15,12 +16,17 @@ async function getDb(): Promise<IDBPDatabase<unknown>> {
 
 				case 1:
 					if (!db.objectStoreNames.contains('handle')) {
-						db.createObjectStore('handle');
+						db.createObjectStore('google');
 					}
 
 				case 2:
 					if (!db.objectStoreNames.contains('external')) {
 						db.createObjectStore('external', { keyPath: 'id' });
+					}
+
+				case 3:
+					if (!db.objectStoreNames.contains('google')) {
+						db.createObjectStore('google');
 					}
 			}
 		},
@@ -48,12 +54,12 @@ export async function getAllVectors(): Promise<VectorProperties[]> {
 
 export async function saveDirHandle(handle: FileSystemDirectoryHandle) {
 	const db = await getDb();
-	await db.put('handle', handle, 'root');
+	await db.put('google', handle, 'root');
 }
 
 export async function getDirHandle(): Promise<FileSystemDirectoryHandle | null> {
 	const db = await getDb();
-	return await db.get('handle', 'root');
+	return await db.get('google', 'root');
 }
 
 export async function deleteVector(id: string) {
@@ -72,4 +78,15 @@ export async function getExternalHandle(
 	const db = await getDb();
 	const handle = await db.get('external', id);
 	return handle || null;
+}
+
+export async function saveUserData(data: UserData) {
+	const db = await getDb();
+	await db.put('google', data, 'acc');
+}
+
+export async function getUserData(): Promise<UserData | null> {
+	const db = await getDb();
+	const data = await db.get('google', 'acc');
+	return data || null;
 }
