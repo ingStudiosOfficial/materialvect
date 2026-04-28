@@ -72,7 +72,7 @@ export default defineConfig({
 			workbox: {
 				globPatterns: ['**/*.{html,css,js,png,svg,ico,json}'],
 				globDirectory: 'dist',
-				cacheId: 'v1.0.0',
+				cacheId: 'v1.0.1',
 				cleanupOutdatedCaches: true,
 				clientsClaim: true,
 				skipWaiting: true,
