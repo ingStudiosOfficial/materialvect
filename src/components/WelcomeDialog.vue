@@ -68,6 +68,10 @@ onMounted(() => {
 		</m3e-list>
 		<p>Materialvect works best on Chromium based browsers.</p>
 		<p>
+			By using Materialvect, you agree to these <a href="/terms.txt">Terms of Service</a> and
+			have read our <a href="/privacy.txt">Privacy Policy</a>.
+		</p>
+		<p>
 			Made with ❤️ by (ing) Studios and Ethan Lee. Materialvect is not vibe-coded and 100%
 			made by humans.
 		</p>
