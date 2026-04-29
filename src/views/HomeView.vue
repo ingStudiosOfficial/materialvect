@@ -95,7 +95,7 @@ function openBackupDialog() {
 }
 
 onMounted(() => {
-	if (localStorage.getItem('hasVisited') !== 'false') {
+	if (localStorage.getItem('hasVisited') !== 'true') {
 		if (welcomeComposable.openWelcomeFunction.value)
 			welcomeComposable.openWelcomeFunction.value();
 		localStorage.setItem('hasVisited', 'true');
