@@ -6,6 +6,9 @@ import { onMounted, useTemplateRef } from 'vue';
 import '@m3e/web/icon';
 import '@m3e/web/list';
 import '@m3e/web/avatar';
+import { useVectors } from '@/stores/vectors';
+
+const vectorsStore = useVectors();
 
 const welcomeComposable = useWelcome();
 
@@ -85,7 +88,7 @@ onMounted(() => {
 				<m3e-icon slot="trailing-icon" name="open_in_new"></m3e-icon>
 				GitHub
 			</m3e-button>
-			<m3e-button variant="filled"
+			<m3e-button variant="filled" @click="vectorsStore.refreshVectors()"
 				><m3e-dialog-action>Let's go</m3e-dialog-action></m3e-button
 			>
 		</div>
