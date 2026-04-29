@@ -1,0 +1,21 @@
+1. Introduction
+Welcome to Materialvect. We value your privacy and are committed to protecting your personal data. The Privacy Policy explains how we collect, use, and safeguard your information when you use our platform.
+
+2. Information We collect
+We do not collect any of your information. We do not operate a server or a database. All data is stored in your browser.
+
+3. Third-Party Services
+We do not collect, sell, or distribute your personal data. However, we may use third-party services such as:
+- Google Identity Services and Google Drive to back your vectors update
+
+4. Your Rights
+You may have the following rights:
+- Log out of your account
+- Revoke access to back projects up
+- Delete all locally stored data
+
+5. Changes to This Policy
+We may update our Privacy Policy from time to time. Please check this Privacy Policy for any changes.
+
+6. Contact Us
+Please feel free to contact us at contact@ingstudios.dev if you have any queries.

@@ -43,9 +43,10 @@ async function tryDeleteVector() {
 		<m3e-menu :id="`more-menu-${props.id}`" position-x="before" ref="menuRef">
 			<!--<m3e-menu-item><m3e-icon slot="icon" name="edit"></m3e-icon>Rename</m3e-menu-item>
 			<m3e-menu-item><m3e-icon slot="icon" name="content_copy"></m3e-icon>Copy</m3e-menu-item>-->
-			<m3e-menu-item @click.stop="tryDeleteVector()"
-				><m3e-icon slot="icon" name="delete"></m3e-icon>Delete</m3e-menu-item
-			>
+			<m3e-menu-item @click.stop="tryDeleteVector()">
+				<m3e-icon slot="icon" name="delete"></m3e-icon>
+				Delete
+			</m3e-menu-item>
 		</m3e-menu>
 	</div>
 </template>

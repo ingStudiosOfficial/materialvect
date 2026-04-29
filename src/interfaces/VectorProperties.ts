@@ -7,4 +7,5 @@ export interface VectorProperties {
 	height: number;
 	synced: boolean;
 	seedColor: string;
+	googleDriveId?: string;
 }

@@ -1,0 +1,22 @@
+Terms and Conditions
+
+Effective from 29/4/2026
+
+1. Acceptance of Terms
+By using Materialvect (the "Service"), provided by (ing) Studios ("we", "us", or "our"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.
+
+2. Description of Service
+Materialvect is a powerful web based Material 3 Expressive SVG editor.
+
+3. Open Source and Intellectual Property
+Materialvect is an open-source project. While the core platform is available under its respective open-source license, the "Materialvect" name, (ing) Studios branding, and specific UI/UX designs are protected by intellectual property laws.
+
+4. Limitation of Liability
+To the maximum extent permitted by law, (ing) Studios shall not be liable for any indirect, incidental, or consequential damages resulting from:
+- Your use or inability to use the Service.
+
+5. Changes to Terms
+We may update these Terms from time to time. We will notify users of significant changes by posting the new Terms on this page and updating the "Last Updated" date.
+
+6. Contact Us
+If you have any questions about these Terms, please contact us at contact@ingstudios.dev.

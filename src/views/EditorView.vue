@@ -27,12 +27,14 @@ import { format, isToday, isYesterday } from 'date-fns';
 import { useRoute } from 'vue-router';
 import { useExternal } from '@/stores/external';
 import { mvctToObject } from '@/utils/mvct';
+import { useGoogle } from '@/composables/google';
 
 const editorStore = useEditor();
 const fileSystemStore = useFileSystem();
 const externalStore = useExternal();
 
 const { isMobile } = useMobile();
+const { backVectorUp } = useGoogle();
 
 const route = useRoute();
 
@@ -45,6 +47,8 @@ const isSaving = ref<boolean>(false);
 const editingExternal = ref<boolean>(false);
 
 async function updateName() {
+	if (!editorStore.vector || !vectorFile.value) return;
+	editorStore.vector.metadata.name = vectorFile.value.metadata.name;
 	await updateVector();
 	await nextTick();
 	vectorNameInput.value?.blur();
@@ -146,6 +150,11 @@ async function onKeyUp(event: KeyboardEvent) {
 	} else if ((event.ctrlKey || event.metaKey) && eventKey === 'v') {
 		editorStore.onPaste();
 	}
+}
+
+async function triggerVectorBackup() {
+	await backVectorUp();
+	editorStore.saveFunction();
 }
 
 const lastSaved = computed(() => {
@@ -255,6 +264,10 @@ onUnmounted(() => {
 					<m3e-menu-item @click="updateVectorSb()">
 						<m3e-icon slot="icon" name="save"></m3e-icon>
 						Save
+					</m3e-menu-item>
+					<m3e-menu-item @click="triggerVectorBackup()">
+						<m3e-icon slot="icon" name="backup"></m3e-icon>
+						Back up
 					</m3e-menu-item>
 				</m3e-menu>
 

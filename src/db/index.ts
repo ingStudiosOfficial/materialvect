@@ -16,7 +16,7 @@ async function getDb(): Promise<IDBPDatabase<unknown>> {
 
 				case 1:
 					if (!db.objectStoreNames.contains('handle')) {
-						db.createObjectStore('google');
+						db.createObjectStore('handle');
 					}
 
 				case 2:
@@ -89,4 +89,9 @@ export async function getUserData(): Promise<UserData | null> {
 	const db = await getDb();
 	const data = await db.get('google', 'acc');
 	return data || null;
+}
+
+export async function clearUserData() {
+	const db = await getDb();
+	await db.clear('google');
 }
