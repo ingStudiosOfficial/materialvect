@@ -28,6 +28,7 @@ import { useRoute } from 'vue-router';
 import { useExternal } from '@/stores/external';
 import { mvctToObject } from '@/utils/mvct';
 import { useGoogle } from '@/composables/google';
+import { printVector } from '@/utils/print';
 
 const editorStore = useEditor();
 const fileSystemStore = useFileSystem();
@@ -268,6 +269,10 @@ onUnmounted(() => {
 					<m3e-menu-item @click="triggerVectorBackup()">
 						<m3e-icon slot="icon" name="backup"></m3e-icon>
 						Back up
+					</m3e-menu-item>
+					<m3e-menu-item @click="printVector(vectorFile)">
+						<m3e-icon slot="icon" name="print"></m3e-icon>
+						Print
 					</m3e-menu-item>
 				</m3e-menu>
 

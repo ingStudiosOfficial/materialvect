@@ -481,8 +481,8 @@ export const useEditor = defineStore('editor', () => {
 		if (!activeElement.value) {
 			console.log('No active element, changing canvas color.');
 			console.log(`fill: ${color};`);
-			rectBg.value?.attr('style', `fill: ${color};`);
-		} else activeElement.value.attr('style', `fill: ${color};`);
+			rectBg.value?.fill(color);
+		} else activeElement.value.fill(color);
 
 		inspectorLastSelectedColor.value = color;
 		saveFunction.value();

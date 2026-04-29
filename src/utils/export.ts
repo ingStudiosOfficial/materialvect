@@ -54,7 +54,7 @@ export async function blobToBase64(blob: Blob): Promise<string> {
 	});
 }
 
-async function toCleanSvg(vector: Mvct): Promise<Svg> {
+export async function toCleanSvg(vector: Mvct): Promise<Svg> {
 	const temporarySvg = new Svg().svg(vector.svg);
 
 	console.log('Temportary SVG:', temporarySvg);
@@ -83,14 +83,21 @@ async function toCleanSvg(vector: Mvct): Promise<Svg> {
 	}
 
 	for (const element of allElements) {
+		console.log('Element is background:', element?.attr('mvct-bg'));
+
+		if (!element) continue;
+
 		const elementFill = element.fill();
-		if (!elementFill) continue;
+		if (!elementFill || !elementFill.startsWith('var(--mvct-color-')) continue;
 
 		try {
 			const themeKey = cssVarToKey(elementFill);
 			const themeColor = vector.theme[themeKey];
 
-			element.fill(hexFromArgb(themeColor));
+			const hex = hexFromArgb(themeColor);
+			console.log('Setting element hex:', hex);
+
+			element.fill(hex);
 		} catch (error) {
 			console.error('Error while parsing color:', error, 'Element:', element);
 		}
@@ -123,6 +130,8 @@ async function toCleanSvg(vector: Mvct): Promise<Svg> {
 		.element('script')
 		.attr('type', 'text/javascript')
 		.words(`/* <![CDATA[ */\n${vector.js}\n/* ]]> */`);
+
+	console.log('Temporary SVG:', temporarySvg.svg());
 
 	return temporarySvg;
 }
@@ -165,45 +174,51 @@ export async function exportAsSvg(vector: Mvct) {
 	}
 }
 
+export async function toCleanPng(vector: Mvct): Promise<Blob> {
+	const temporarySvg = await toCleanSvg(vector);
+	temporarySvg.find('script').forEach((s) => s.remove());
+	const svg = temporarySvg.svg();
+	const width = vector.metadata.width;
+	const height = vector.metadata.height;
+
+	const imageBlob = await new Promise<Blob>((resolve, reject) => {
+		const ratio = window.devicePixelRatio || 1;
+		const canvas = document.createElement('canvas');
+		canvas.width = width * ratio;
+		canvas.height = height * ratio;
+		canvas.style.width = `${width}px`;
+		canvas.style.height = `${height}px`;
+		const ctx = canvas.getContext('2d');
+		if (ctx) {
+			ctx.scale(ratio, ratio);
+		}
+
+		const img = new Image();
+		const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+		const url = URL.createObjectURL(svgBlob);
+
+		img.onload = () => {
+			ctx?.drawImage(img, 0, 0);
+			URL.revokeObjectURL(url);
+			canvas.toBlob((blob) => {
+				if (blob) {
+					resolve(blob);
+				} else {
+					reject(new Error('Failed to generate blob'));
+				}
+			}, 'image/png');
+		};
+
+		img.onerror = (err) => reject(err);
+		img.src = url;
+	});
+
+	return imageBlob;
+}
+
 export async function exportAsPng(vector: Mvct) {
 	try {
-		const temporarySvg = await toCleanSvg(vector);
-		temporarySvg.find('script').forEach((s) => s.remove());
-		const svg = temporarySvg.svg();
-		const width = vector.metadata.width;
-		const height = vector.metadata.height;
-
-		const imageBlob = await new Promise<Blob>((resolve, reject) => {
-			const ratio = window.devicePixelRatio || 1;
-			const canvas = document.createElement('canvas');
-			canvas.width = width * ratio;
-			canvas.height = height * ratio;
-			canvas.style.width = `${width}px`;
-			canvas.style.height = `${height}px`;
-			const ctx = canvas.getContext('2d');
-			if (ctx) {
-				ctx.scale(ratio, ratio);
-			}
-
-			const img = new Image();
-			const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-			const url = URL.createObjectURL(svgBlob);
-
-			img.onload = () => {
-				ctx?.drawImage(img, 0, 0);
-				URL.revokeObjectURL(url);
-				canvas.toBlob((blob) => {
-					if (blob) {
-						resolve(blob);
-					} else {
-						reject(new Error('Failed to generate blob'));
-					}
-				}, 'image/png');
-			};
-
-			img.onerror = (err) => reject(err);
-			img.src = url;
-		});
+		const imageBlob = await toCleanPng(vector);
 
 		if ('showSaveFilePicker' in window) {
 			try {
