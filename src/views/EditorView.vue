@@ -289,7 +289,7 @@ onUnmounted(() => {
 				<m3e-menu id="insert-menu">
 					<m3e-menu-item>
 						<m3e-icon slot="icon" name="shapes"></m3e-icon>
-						<m3e-menu-trigger for="insert-shape-menu">Shape</m3e-menu-trigger>
+						<m3e-menu-trigger for="insert-shape-menu">Basic shape</m3e-menu-trigger>
 					</m3e-menu-item>
 					<m3e-menu-item @click="openMaterialShapesDialog()">
 						<m3e-icon slot="icon" name="star"></m3e-icon>

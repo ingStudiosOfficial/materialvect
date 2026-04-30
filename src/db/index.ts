@@ -54,12 +54,12 @@ export async function getAllVectors(): Promise<VectorProperties[]> {
 
 export async function saveDirHandle(handle: FileSystemDirectoryHandle) {
 	const db = await getDb();
-	await db.put('google', handle, 'root');
+	await db.put('handle', handle, 'root');
 }
 
 export async function getDirHandle(): Promise<FileSystemDirectoryHandle | null> {
 	const db = await getDb();
-	return await db.get('google', 'root');
+	return await db.get('handle', 'root');
 }
 
 export async function deleteVector(id: string) {
