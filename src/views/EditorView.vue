@@ -29,6 +29,7 @@ import { useExternal } from '@/stores/external';
 import { mvctToObject } from '@/utils/mvct';
 import { useGoogle } from '@/composables/google';
 import { printVector } from '@/utils/print';
+import MaterialShapesDialog from '@/components/MaterialShapesDialog.vue';
 
 const editorStore = useEditor();
 const fileSystemStore = useFileSystem();
@@ -142,20 +143,29 @@ function handleImageUpload() {
 	editorStore.uploadImage(imageFile);
 }
 
-async function onKeyUp(event: KeyboardEvent) {
+async function onKeyDown(event: KeyboardEvent) {
 	const eventKey = event.key.toLowerCase();
 
 	if ((event.ctrlKey || event.metaKey) && eventKey === 's') {
 		event.preventDefault();
 		updateVectorSb();
 	} else if ((event.ctrlKey || event.metaKey) && eventKey === 'v') {
+		event.preventDefault();
 		editorStore.onPaste();
+	} else if ((event.ctrlKey || event.metaKey) && eventKey === 'd') {
+		event.preventDefault();
+		editorStore.duplicateElement(editorStore.activeElement);
 	}
 }
 
 async function triggerVectorBackup() {
 	await backVectorUp();
 	editorStore.saveFunction();
+}
+
+function openMaterialShapesDialog() {
+	if (!editorStore.openMaterialShapesFunction) return;
+	editorStore.openMaterialShapesFunction();
 }
 
 const lastSaved = computed(() => {
@@ -218,11 +228,11 @@ onMounted(async () => {
 
 	document.title = `${vectorFile.value?.metadata.name || 'Untitled Vector'} | Materialvect`;
 
-	document.addEventListener('keydown', onKeyUp);
+	document.addEventListener('keydown', onKeyDown);
 });
 
 onUnmounted(() => {
-	document.removeEventListener('keydown', onKeyUp);
+	document.removeEventListener('keydown', onKeyDown);
 });
 </script>
 
@@ -280,6 +290,10 @@ onUnmounted(() => {
 					<m3e-menu-item>
 						<m3e-icon slot="icon" name="shapes"></m3e-icon>
 						<m3e-menu-trigger for="insert-shape-menu">Shape</m3e-menu-trigger>
+					</m3e-menu-item>
+					<m3e-menu-item @click="openMaterialShapesDialog()">
+						<m3e-icon slot="icon" name="star"></m3e-icon>
+						Material shape
 					</m3e-menu-item>
 					<m3e-menu-item @click="editorStore.createText()">
 						<m3e-icon slot="icon" name="text_fields"></m3e-icon>
@@ -369,6 +383,7 @@ onUnmounted(() => {
 		<ThemeDialog></ThemeDialog>
 		<ColorPicker @input="editorStore.changeColor"></ColorPicker>
 		<FontPicker></FontPicker>
+		<MaterialShapesDialog></MaterialShapesDialog>
 		<input
 			type="file"
 			class="hidden-image-input"

@@ -34,6 +34,7 @@ export const useEditor = defineStore('editor', () => {
 	const rectBg = ref<Rect | null>(null);
 	const inspectorLastSelectedColor = ref<string>('var(--md-sys-color-surface-container-high)');
 	const lastSaved = ref<Date>(new Date(vector.value?.metadata.modified || 0));
+	const openMaterialShapesFunction = ref<(() => void) | null>(null);
 
 	let isDragging = false;
 	let startPoint = { x: 0, y: 0 };
@@ -41,19 +42,50 @@ export const useEditor = defineStore('editor', () => {
 
 	let saveTimeout: ReturnType<typeof setTimeout> | null = null;
 
-	function setActiveElement(element: MvctElement) {
-		console.log('Setting active element:', element);
-		if (element.node.tagName === 'tspan') {
+	function setActiveElement(mvctElement: MvctElement) {
+		console.log('Setting active element:', mvctElement);
+		if (mvctElement.node.tagName === 'tspan') {
 			console.log('Active element is tspan.');
 
-			const parent = element.parent();
+			const parent = mvctElement.parent();
 			if (!parent || parent.node.tagName !== 'text') {
 				console.error('No text parent for tspan found.');
+				activeElement.value = mvctElement;
 				return;
 			}
 
 			activeElement.value = parent as MvctElement;
-		} else activeElement.value = element;
+		} else if (mvctElement.attr('mvct-material-shape')) {
+			console.log('Active element is material shape.');
+
+			const child = mvctElement.findOne('[mvct-material-path="true"]');
+			if (!child) {
+				console.error('No path found for group.');
+				activeElement.value = mvctElement;
+				return;
+			}
+
+			activeElement.value = child as MvctElement;
+		} else activeElement.value = mvctElement;
+
+		allElements.forEach((element) => {
+			element.removeClass('mvct-focus');
+		});
+		mvctElement.addClass('mvct-focus');
+
+		if (mvctElement.attr('mvct-material-path')) {
+			const parent = mvctElement.parent();
+			if (parent) {
+				console.log('Mvct element:', mvctElement);
+				console.log('Setting dragged element as parent:', parent);
+				draggedElement.value = parent as MvctElement;
+			}
+		} else draggedElement.value = mvctElement;
+
+		if (mvctElement.attr('mvct-material-shape')) {
+			const child = mvctElement.findOne('[mvct-material-path="true"]') as MvctElement | null;
+			if (child) inspectorLastSelectedColor.value = child.fill();
+		} else inspectorLastSelectedColor.value = mvctElement.fill();
 
 		updateCurrentProperties();
 	}
@@ -67,13 +99,19 @@ export const useEditor = defineStore('editor', () => {
 		if (!activeElement.value) return;
 
 		activeElementProperties.type = activeElement.value.node.tagName as MvctElementType;
-		activeElementProperties.x = Number(activeElement.value.x());
-		activeElementProperties.y = Number(activeElement.value.y());
+
+		const positionalSource = activeElement.value.attr('mvct-material-path')
+			? draggedElement.value
+			: activeElement.value;
+
+		activeElementProperties.x = Number(positionalSource?.x());
+		activeElementProperties.y = Number(positionalSource?.y());
 
 		if (
 			activeElementProperties.type === 'rect' ||
 			activeElementProperties.type === 'ellipse' ||
-			activeElementProperties.type === 'image'
+			activeElementProperties.type === 'image' ||
+			activeElementProperties.type === 'path'
 		) {
 			activeElementProperties.width = Number(activeElement.value.width());
 			activeElementProperties.height = Number(activeElement.value.height());
@@ -90,13 +128,18 @@ export const useEditor = defineStore('editor', () => {
 		(newProperties) => {
 			if (!activeElement.value) return;
 
-			activeElement.value.x(Number(newProperties.x));
-			activeElement.value.y(Number(newProperties.y));
+			const positionTarget = activeElement.value.attr('mvct-material-path')
+				? draggedElement.value
+				: activeElement.value;
+
+			positionTarget?.x(Number(newProperties.x));
+			positionTarget?.y(Number(newProperties.y));
 
 			if (
 				newProperties.type === 'rect' ||
 				newProperties.type === 'ellipse' ||
-				newProperties.type === 'image'
+				newProperties.type === 'image' ||
+				activeElementProperties.type === 'path'
 			) {
 				activeElement.value.width(Number(newProperties.width));
 				activeElement.value.height(Number(newProperties.height));
@@ -235,26 +278,20 @@ export const useEditor = defineStore('editor', () => {
 
 			setActiveElement(mvctElement);
 
-			allElements.forEach((element) => {
-				element.removeClass('mvct-focus');
-			});
-			mvctElement.addClass('mvct-focus');
-
-			draggedElement.value = mvctElement;
-
-			inspectorLastSelectedColor.value = mvctElement.fill();
-
 			console.log('Pointerdown on:', mouseEvent.target);
 
-			mouseEvent.stopPropagation();
 			isDragging = true;
 
 			const pt = svgCanvas.value.point(mouseEvent.clientX, mouseEvent.clientY);
 			startPoint = { x: pt.x, y: pt.y };
 
+			const dragTarget = mvctElement.attr('mvct-material-path')
+				? (mvctElement.parent() as SvgElement)
+				: mvctElement;
+
 			initialElementPos = {
-				x: mvctElement.x() as number,
-				y: mvctElement.y() as number,
+				x: dragTarget.x() as number,
+				y: dragTarget.y() as number,
 			};
 
 			window.addEventListener('pointermove', handleGlobalMove);
@@ -384,6 +421,30 @@ export const useEditor = defineStore('editor', () => {
 
 			registerElement(ellipse);
 		}
+
+		saveFunction.value();
+	}
+
+	function createMaterialShape(shapeString: string) {
+		if (!svgCanvas.value) return;
+
+		const pathString = shapeString.match(/<path[^>]*?(\/|><\/path)>/i)?.[0];
+		if (!pathString) {
+			console.error('Path string not found.');
+			return;
+		}
+
+		const group = svgCanvas.value.group().attr('mvct-material-shape', true);
+		group.svg(pathString);
+		const path = group.findOne('path');
+		if (!path) {
+			console.error('Path element not found after insertion.');
+			return;
+		}
+		path.attr('mvct-material-path', true);
+		path.attr('fill', 'var(--mvct-color-primary-container)');
+
+		registerElement(group);
 
 		saveFunction.value();
 	}
@@ -547,8 +608,10 @@ export const useEditor = defineStore('editor', () => {
 		inspectorLastSelectedColor,
 		rectBg,
 		lastSaved,
+		openMaterialShapesFunction,
 		initialize,
 		createShape,
+		createMaterialShape,
 		createText,
 		uploadImage,
 		deleteElement,

@@ -72,7 +72,8 @@ onMounted(async () => {
 				v-if="
 					activeElementProperties.type === 'rect' ||
 					activeElementProperties.type === 'ellipse' ||
-					activeElementProperties.type === 'image'
+					activeElementProperties.type === 'image' ||
+					activeElementProperties.type === 'path'
 				"
 				class="conditional-container"
 			>
