@@ -273,7 +273,7 @@ export const useEditor = defineStore('editor', () => {
 		mvctElement.on('pointerdown', (event) => {
 			if (svgCanvas.value === null) return;
 
-			const mouseEvent = event as MouseEvent;
+			const mouseEvent = event as PointerEvent;
 			mouseEvent.stopPropagation();
 
 			setActiveElement(mvctElement);
@@ -296,6 +296,45 @@ export const useEditor = defineStore('editor', () => {
 
 			window.addEventListener('pointermove', handleGlobalMove);
 			window.addEventListener('pointerup', handleGlobalUp);
+		});
+
+		mvctElement.on('pointermove', (event) => {
+			const mouseEvent = event as PointerEvent;
+
+			const pt = svgCanvas.value?.point(mouseEvent.clientX, mouseEvent.clientY);
+			if (pt) {
+				const threshold = 20;
+
+				const elementX = mvctElement.x() as number;
+				const elementY = mvctElement.y() as number;
+				const elementWidth = mvctElement.width() as number;
+				const elementHeight = mvctElement.height() as number;
+
+				const isLeft = pt.x > elementX - threshold && pt.x < elementX + threshold;
+				const isRight =
+					pt.x > elementX + elementWidth - threshold &&
+					pt.x < elementX + elementWidth + threshold;
+				const isTop = pt.y > elementY - threshold && pt.y < elementY + threshold;
+				const isBottom =
+					pt.y > elementY + elementHeight - threshold &&
+					pt.y < elementY + elementHeight + threshold;
+
+				if (isLeft) {
+					document.body.style.cursor = 'w-resize';
+				} else if (isRight) {
+					document.body.style.cursor = 'e-resize';
+				} else if (isTop) {
+					document.body.style.cursor = 'n-resize';
+				} else if (isBottom) {
+					document.body.style.cursor = 's-resize';
+				} else {
+					document.body.style.cursor = 'default';
+				}
+			}
+		});
+
+		mvctElement.on('pointerleave', () => {
+			document.body.style.cursor = 'default';
 		});
 
 		mvctElement.on('keydown', async (event) => {
@@ -369,7 +408,7 @@ export const useEditor = defineStore('editor', () => {
 		}
 	}
 
-	function handleGlobalMove(event: MouseEvent) {
+	function handleGlobalMove(event: PointerEvent) {
 		if (!isDragging || !svgCanvas.value || !draggedElement.value) return;
 
 		const pt = svgCanvas.value.point(event.clientX, event.clientY);
