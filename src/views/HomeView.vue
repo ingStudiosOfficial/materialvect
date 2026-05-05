@@ -141,7 +141,7 @@ onMounted(() => {
 						Sign in with Google to backup your vectors
 					</m3e-tooltip>
 				</div>
-				<div v-else @click="openBackupDialog()">
+				<div v-else-if="googleComposable.user.value" @click="openBackupDialog()">
 					<m3e-icon-button id="profile-button">
 						<img class="pfp-image" :src="googleComposable.user.value.pfp" />
 					</m3e-icon-button>
