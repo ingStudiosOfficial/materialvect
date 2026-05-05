@@ -240,10 +240,13 @@ onUnmounted(() => {
 	<div v-if="vectorFile !== null" class="editor-wrapper">
 		<m3e-app-bar class="app-bar">
 			<div slot="title" class="app-bar-actions">
-				<button class="mvct-logo" @click="router.push('/')">
+				<button v-if="!isMobile" class="mvct-logo" @click="router.push('/')">
 					<img src="/materialvect_logo_trans_full.png" class="mvct-logo-image" />
 				</button>
 				<input
+					:style="{
+						marginLeft: isMobile ? '10px' : '0',
+					}"
 					ref="vectorNameInput"
 					slot="title"
 					v-model="vectorFile.metadata.name"
@@ -251,7 +254,7 @@ onUnmounted(() => {
 					@change="updateName()"
 				/>
 
-				<div class="primary-actions">
+				<div v-if="!isMobile" class="primary-actions">
 					<m3e-button variant="text">
 						<m3e-menu-trigger for="file-menu">File</m3e-menu-trigger>
 					</m3e-button>
@@ -261,6 +264,20 @@ onUnmounted(() => {
 					<m3e-button variant="text">
 						<m3e-menu-trigger for="theme-menu">Theme</m3e-menu-trigger>
 					</m3e-button>
+				</div>
+				<div v-else class="primary-actions">
+					<m3e-icon-button>
+						<m3e-icon name="folder"></m3e-icon>
+						<m3e-menu-trigger for="file-menu"></m3e-menu-trigger>
+					</m3e-icon-button>
+					<m3e-icon-button>
+						<m3e-icon name="add_box"></m3e-icon>
+						<m3e-menu-trigger for="insert-menu"></m3e-menu-trigger>
+					</m3e-icon-button>
+					<m3e-icon-button>
+						<m3e-icon name="colors"></m3e-icon>
+						<m3e-menu-trigger for="theme-menu"></m3e-menu-trigger>
+					</m3e-icon-button>
 				</div>
 
 				<m3e-menu id="file-menu">
@@ -331,7 +348,7 @@ onUnmounted(() => {
 					<m3e-icon-button id="saving-status">
 						<m3e-icon name="autorenew"></m3e-icon>
 					</m3e-icon-button>
-					<p class="saving-text">Saving...</p>
+					<p v-if="!isMobile" class="saving-text">Saving...</p>
 				</div>
 
 				<m3e-rich-tooltip for="save-status">
@@ -344,10 +361,14 @@ onUnmounted(() => {
 				</m3e-rich-tooltip>
 			</div>
 			<div slot="trailing" class="app-bar-actions" style="margin-right: 10px">
-				<m3e-button variant="tonal">
+				<m3e-button v-if="!isMobile" variant="tonal">
 					<m3e-icon slot="icon" name="share"></m3e-icon>
 					<m3e-menu-trigger for="export-menu">Export</m3e-menu-trigger>
 				</m3e-button>
+				<m3e-icon-button v-else variant="tonal">
+					<m3e-icon name="share"></m3e-icon>
+					<m3e-menu-trigger for="export-menu"></m3e-menu-trigger>
+				</m3e-icon-button>
 
 				<m3e-menu id="export-menu">
 					<m3e-menu-item @click="exportAsMvct(vectorFile)">
@@ -380,6 +401,7 @@ onUnmounted(() => {
 				@change="updateVectorFromEditorArea"
 			></EditorArea>
 		</m3e-split-pane>
+
 		<ThemeDialog></ThemeDialog>
 		<ColorPicker @input="editorStore.changeColor"></ColorPicker>
 		<FontPicker></FontPicker>

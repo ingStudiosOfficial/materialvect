@@ -23,10 +23,12 @@ import { useGoogle } from '@/composables/google';
 import BackupDialog from '@/components/BackupDialog.vue';
 import WelcomeDialog from '@/components/WelcomeDialog.vue';
 import { useWelcome } from '@/composables/welcome';
+import { useMobile } from '@/composables/mobile';
 
 const vectorsStore = useVectors();
 const fileStore = useExternal();
 
+const { isMobile } = useMobile();
 const googleComposable = useGoogle();
 const welcomeComposable = useWelcome();
 
@@ -114,7 +116,7 @@ onMounted(() => {
 				<m3e-chip v-if="isBeta" style="--m3e-chip-container-shape: 25px">BETA</m3e-chip>
 			</div>
 			<div slot="trailing" class="app-bar-title" style="margin-right: 10px">
-				<div v-if="!googleComposable.user.value">
+				<div v-if="!googleComposable.user.value && !isMobile">
 					<m3e-button
 						variant="tonal"
 						id="sign-in-google"
@@ -123,6 +125,18 @@ onMounted(() => {
 						<m3e-icon slot="icon" name="account_circle"></m3e-icon>
 						Sign in
 					</m3e-button>
+					<m3e-tooltip for="sign-in-google">
+						Sign in with Google to backup your vectors
+					</m3e-tooltip>
+				</div>
+				<div v-else-if="!googleComposable.user.value && isMobile">
+					<m3e-icon-button
+						variant="tonal"
+						id="sign-in-google"
+						@click="googleComposable.triggerGoogleLogin()"
+					>
+						<m3e-icon name="account_circle"></m3e-icon>
+					</m3e-icon-button>
 					<m3e-tooltip for="sign-in-google">
 						Sign in with Google to backup your vectors
 					</m3e-tooltip>
