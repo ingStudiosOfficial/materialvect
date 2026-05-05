@@ -2,11 +2,13 @@ import { defineStore } from 'pinia';
 import { reactive, ref, watch } from 'vue';
 import type { MvctElement } from '@/interfaces/MvctElement';
 import type { ActiveElementProperties } from '@/interfaces/ActiveElementProperties';
-import { List, Rect, Svg, SVG, Text, type Element as SvgElement } from '@svgdotjs/svg.js';
+import { List, Point, Rect, Svg, SVG, Text, type Element as SvgElement } from '@svgdotjs/svg.js';
 import type { Mvct } from '@/interfaces/Mvct';
 import type { MvctElementType } from '@/interfaces/ElementType';
 import type { MvctTheme } from '@/interfaces/Theme';
 import { extension } from 'mime-types';
+
+type ResizeType = 'n' | 's' | 'e' | 'w' | 'ne' | 'se' | 'sw' | 'nw';
 
 export const useEditor = defineStore('editor', () => {
 	const activeElement = ref<MvctElement | null>(null);
@@ -39,8 +41,9 @@ export const useEditor = defineStore('editor', () => {
 	let isDragging = false;
 	let startPoint = { x: 0, y: 0 };
 	let initialElementPos = { x: 0, y: 0 };
-
 	let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+	let elementEdge: ResizeType | null = null;
+	let initialElementSize = { w: 0, h: 0 };
 
 	function setActiveElement(mvctElement: MvctElement) {
 		console.log('Setting active element:', mvctElement);
@@ -280,61 +283,43 @@ export const useEditor = defineStore('editor', () => {
 
 			console.log('Pointerdown on:', mouseEvent.target);
 
-			isDragging = true;
-
 			const pt = svgCanvas.value.point(mouseEvent.clientX, mouseEvent.clientY);
 			startPoint = { x: pt.x, y: pt.y };
+
+			const { elementEdge: edge } = getElementEdge(mvctElement, pt);
+			elementEdge = edge;
+
+			isDragging = true;
 
 			const dragTarget = mvctElement.attr('mvct-material-path')
 				? (mvctElement.parent() as SvgElement)
 				: mvctElement;
 
 			initialElementPos = {
-				x: dragTarget.x() as number,
-				y: dragTarget.y() as number,
+				x: dragTarget.bbox().x,
+				y: dragTarget.bbox().y,
+			};
+
+			initialElementSize = {
+				w: dragTarget.bbox().width,
+				h: dragTarget.bbox().height,
 			};
 
 			window.addEventListener('pointermove', handleGlobalMove);
 			window.addEventListener('pointerup', handleGlobalUp);
 		});
 
-		mvctElement.on('pointermove', (event) => {
+		console.log('Registering pointermove event for:', element);
+		svgCanvas.value?.on('pointermove', (event) => {
 			const mouseEvent = event as PointerEvent;
 
 			const pt = svgCanvas.value?.point(mouseEvent.clientX, mouseEvent.clientY);
 			if (pt) {
-				const threshold = 20;
+				const { cursor } = getElementEdge(mvctElement, pt);
 
-				const elementX = mvctElement.x() as number;
-				const elementY = mvctElement.y() as number;
-				const elementWidth = mvctElement.width() as number;
-				const elementHeight = mvctElement.height() as number;
-
-				const isLeft = pt.x > elementX - threshold && pt.x < elementX + threshold;
-				const isRight =
-					pt.x > elementX + elementWidth - threshold &&
-					pt.x < elementX + elementWidth + threshold;
-				const isTop = pt.y > elementY - threshold && pt.y < elementY + threshold;
-				const isBottom =
-					pt.y > elementY + elementHeight - threshold &&
-					pt.y < elementY + elementHeight + threshold;
-
-				if (isLeft) {
-					document.body.style.cursor = 'w-resize';
-				} else if (isRight) {
-					document.body.style.cursor = 'e-resize';
-				} else if (isTop) {
-					document.body.style.cursor = 'n-resize';
-				} else if (isBottom) {
-					document.body.style.cursor = 's-resize';
-				} else {
-					document.body.style.cursor = 'default';
-				}
+				mvctElement.attr('cursor', cursor === 'default' ? 'pointer' : cursor);
+				document.body.style.cursor = cursor;
 			}
-		});
-
-		mvctElement.on('pointerleave', () => {
-			document.body.style.cursor = 'default';
 		});
 
 		mvctElement.on('keydown', async (event) => {
@@ -408,6 +393,163 @@ export const useEditor = defineStore('editor', () => {
 		}
 	}
 
+	function getElementEdge(
+		mvctElement: MvctElement,
+		pt: Point,
+	): { cursor: string; elementEdge: ResizeType | null } {
+		const threshold = 5;
+
+		const elementX = mvctElement.x() as number;
+		const elementY = mvctElement.y() as number;
+		const elementWidth = mvctElement.width() as number;
+		const elementHeight = mvctElement.height() as number;
+
+		const isLeft = pt.x > elementX - threshold && pt.x < elementX + threshold;
+		const isRight =
+			pt.x > elementX + elementWidth - threshold &&
+			pt.x < elementX + elementWidth + threshold;
+		const isTop = pt.y > elementY - threshold && pt.y < elementY + threshold;
+		const isBottom =
+			pt.y > elementY + elementHeight - threshold &&
+			pt.y < elementY + elementHeight + threshold;
+
+		let cursor = 'default';
+		let edge: ResizeType | null = null;
+
+		if (isTop && isLeft) {
+			cursor = 'nw-resize';
+			edge = 'nw';
+		} else if (isTop && isRight) {
+			cursor = 'ne-resize';
+			edge = 'ne';
+		} else if (isBottom && isLeft) {
+			cursor = 'sw-resize';
+			edge = 'sw';
+		} else if (isBottom && isRight) {
+			cursor = 'se-resize';
+			edge = 'se';
+		} else if (isLeft) {
+			cursor = 'w-resize';
+			edge = 'w';
+		} else if (isRight) {
+			cursor = 'e-resize';
+			edge = 'e';
+		} else if (isTop) {
+			cursor = 'n-resize';
+			edge = 'n';
+		} else if (isBottom) {
+			cursor = 's-resize';
+			edge = 's';
+		} else {
+			cursor = 'default';
+			edge = null;
+		}
+
+		return { cursor, elementEdge: edge };
+	}
+
+	function onElementResize(deltaX: number, deltaY: number) {
+		if (!draggedElement.value) return;
+
+		switch (elementEdge) {
+			case 'e': {
+				handleEast(deltaX);
+				break;
+			}
+
+			case 'se': {
+				handleSouth(deltaY);
+				handleEast(deltaX);
+				break;
+			}
+
+			case 's': {
+				handleSouth(deltaY);
+				break;
+			}
+
+			case 'sw': {
+				handleSouth(deltaY);
+				handleWest(deltaX);
+				break;
+			}
+
+			case 'w': {
+				handleWest(deltaX);
+				break;
+			}
+
+			case 'nw': {
+				handleNorth(deltaY);
+				handleWest(deltaX);
+				break;
+			}
+
+			case 'n': {
+				handleNorth(deltaY);
+				break;
+			}
+
+			case 'ne': {
+				handleNorth(deltaY);
+				handleEast(deltaX);
+				break;
+			}
+		}
+	}
+
+	function handleEast(deltaX: number) {
+		if (!draggedElement.value) return;
+		const newWidth = initialElementSize.w + deltaX;
+		if (newWidth < 0) {
+			draggedElement.value.width(Math.abs(newWidth));
+			draggedElement.value.x(initialElementPos.x + newWidth);
+			elementEdge = 'w';
+		} else {
+			draggedElement.value.width(newWidth);
+			draggedElement.value.x(initialElementPos.x);
+		}
+	}
+
+	function handleSouth(deltaY: number) {
+		if (!draggedElement.value) return;
+		const newHeight = initialElementSize.h + deltaY;
+		if (newHeight < 0) {
+			draggedElement.value.height(Math.abs(newHeight));
+			draggedElement.value.y(initialElementPos.y + newHeight);
+			elementEdge = 'n';
+		} else {
+			draggedElement.value.height(newHeight);
+			draggedElement.value.y(initialElementPos.y);
+		}
+	}
+
+	function handleWest(deltaX: number) {
+		if (!draggedElement.value) return;
+		const newWidth = initialElementSize.w - deltaX;
+		if (newWidth < 0) {
+			draggedElement.value.width(Math.abs(newWidth));
+			draggedElement.value.x(initialElementPos.x + initialElementSize.w);
+			elementEdge = 'e';
+		} else {
+			draggedElement.value.width(newWidth);
+			draggedElement.value.x(initialElementPos.x + deltaX);
+		}
+	}
+
+	function handleNorth(deltaY: number) {
+		if (!draggedElement.value) return;
+		const newHeight = initialElementSize.h - deltaY;
+		if (newHeight < 0) {
+			draggedElement.value.height(Math.abs(newHeight));
+			draggedElement.value.y(initialElementPos.y + initialElementSize.h);
+			elementEdge = 's';
+		} else {
+			draggedElement.value.height(newHeight);
+			draggedElement.value.y(initialElementPos.y + deltaY);
+		}
+	}
+
 	function handleGlobalMove(event: PointerEvent) {
 		if (!isDragging || !svgCanvas.value || !draggedElement.value) return;
 
@@ -416,7 +558,11 @@ export const useEditor = defineStore('editor', () => {
 		const deltaX = pt.x - startPoint.x;
 		const deltaY = pt.y - startPoint.y;
 
-		draggedElement.value.move(initialElementPos.x + deltaX, initialElementPos.y + deltaY);
+		if (elementEdge) {
+			onElementResize(deltaX, deltaY);
+		} else {
+			draggedElement.value.move(initialElementPos.x + deltaX, initialElementPos.y + deltaY);
+		}
 
 		updateCurrentProperties();
 	}
@@ -427,6 +573,7 @@ export const useEditor = defineStore('editor', () => {
 		isDragging = false;
 		startPoint = { x: 0, y: 0 };
 		initialElementPos = { x: 0, y: 0 };
+		initialElementSize = { w: 0, h: 0 };
 
 		window.removeEventListener('pointermove', handleGlobalMove);
 		window.removeEventListener('pointerup', handleGlobalUp);
