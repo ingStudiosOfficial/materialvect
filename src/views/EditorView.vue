@@ -30,6 +30,7 @@ import { mvctToObject } from '@/utils/mvct';
 import { useGoogle } from '@/composables/google';
 import { printVector } from '@/utils/print';
 import MaterialShapesDialog from '@/components/MaterialShapesDialog.vue';
+import EventsDialog from '@/components/EventsDialog.vue';
 
 const editorStore = useEditor();
 const fileSystemStore = useFileSystem();
@@ -406,6 +407,7 @@ onUnmounted(() => {
 		<ColorPicker @input="editorStore.changeColor"></ColorPicker>
 		<FontPicker></FontPicker>
 		<MaterialShapesDialog></MaterialShapesDialog>
+		<EventsDialog></EventsDialog>
 		<input
 			type="file"
 			class="hidden-image-input"

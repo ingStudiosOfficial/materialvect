@@ -39,4 +39,4 @@ __screenshots__/
 *.timestamp-*-*.mjs
 
 *.mvct
-dev-dist/*
+dev-dist/

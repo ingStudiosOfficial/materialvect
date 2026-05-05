@@ -33,6 +33,11 @@ function setVectorDimensions() {
 	editorStore.saveFunction();
 }
 
+function openEventsDialog() {
+	if (!editorStore.openEventsFunction) return;
+	editorStore.openEventsFunction();
+}
+
 onMounted(async () => {
 	/*
 	try {
@@ -61,6 +66,9 @@ onMounted(async () => {
 					variant="outlined"
 					@click="editorStore.deleteElement(editorStore.activeElement)"
 					>Delete</m3e-button
+				>
+				<m3e-button variant="outlined" disabled @click="openEventsDialog()"
+					>Events</m3e-button
 				>
 			</m3e-button-group>
 			<p>X</p>

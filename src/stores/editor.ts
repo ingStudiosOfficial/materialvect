@@ -37,6 +37,7 @@ export const useEditor = defineStore('editor', () => {
 	const inspectorLastSelectedColor = ref<string>('var(--md-sys-color-surface-container-high)');
 	const lastSaved = ref<Date>(new Date(vector.value?.metadata.modified || 0));
 	const openMaterialShapesFunction = ref<(() => void) | null>(null);
+	const openEventsFunction = ref<(() => void) | null>(null);
 
 	let isDragging = false;
 	let startPoint = { x: 0, y: 0 };
@@ -226,6 +227,8 @@ export const useEditor = defineStore('editor', () => {
 	}
 
 	function registerElement(element: SvgElement) {
+		if (element.node.tagName === 'style') return;
+
 		if (element.attr('mvct-bg')) {
 			element.on('pointerdown', () => {
 				allElements.forEach((element) => {
@@ -795,6 +798,7 @@ export const useEditor = defineStore('editor', () => {
 		rectBg,
 		lastSaved,
 		openMaterialShapesFunction,
+		openEventsFunction,
 		initialize,
 		createShape,
 		createMaterialShape,
