@@ -68,6 +68,7 @@ onMounted(async () => {
 		css: generateCss(theme),
 		js: '',
 		theme: theme,
+		events: [],
 		assets: {
 			images: [],
 			fonts: [],

@@ -6,6 +6,7 @@ import '@m3e/web/option';
 import { M3eSelectElement } from '@m3e/web/select';
 import { type PropertyChange, type ActionType, properties, actionTypes } from '@/types/action';
 import type { ActionEvent } from '@/interfaces/ActionEvent';
+import { toStartCase } from '@/utils/string';
 
 interface ComponentProps {
 	action: ActionEvent;
@@ -31,11 +32,11 @@ const unitSelect = useTemplateRef<M3eSelectElement>('unitSelect');
 
 const changeVerb = computed(() => {
 	switch (actionType.value) {
-		case 'Set': {
+		case 'set': {
 			return 'to';
 		}
 
-		case 'Move': {
+		case 'move': {
 			return 'by';
 		}
 
@@ -46,7 +47,7 @@ const changeVerb = computed(() => {
 });
 
 const validUnits = computed<string[]>(() => {
-	if (propertyAction.value === 'X' || propertyAction.value === 'Y') {
+	if (propertyAction.value === 'x' || propertyAction.value === 'y') {
 		return ['px'];
 	} else {
 		return ['px'];
@@ -60,6 +61,8 @@ const actionTitle = computed(() => {
 const actionEvent = computed<ActionEvent>(() => {
 	return {
 		id: propertyId.value,
+		event: props.action.event,
+		element: props.action.element,
 		title: actionTitle.value,
 		type: actionType.value,
 		property: propertyAction.value,
@@ -100,7 +103,8 @@ async function onUnitSelect() {
 						v-for="type in actionTypes"
 						:key="type"
 						:selected="type === actionType"
-						>{{ type }}</m3e-option
+						:value="type"
+						>{{ toStartCase(type) }}</m3e-option
 					>
 				</m3e-select>
 			</m3e-form-field>
@@ -115,7 +119,8 @@ async function onUnitSelect() {
 						v-for="property in properties"
 						:key="property"
 						:selected="property === propertyAction"
-						>{{ property }}</m3e-option
+						:value="property"
+						>{{ toStartCase(property) }}</m3e-option
 					>
 				</m3e-select>
 			</m3e-form-field>

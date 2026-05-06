@@ -321,7 +321,6 @@ export const useEditor = defineStore('editor', () => {
 				const { cursor } = getElementEdge(mvctElement, pt);
 
 				mvctElement.attr('cursor', cursor === 'default' ? 'pointer' : cursor);
-				document.body.style.cursor = cursor;
 			}
 		});
 

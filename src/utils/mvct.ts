@@ -2,6 +2,7 @@ import type { Mvct } from '@/interfaces/Mvct';
 import type { MvctTheme } from '@/interfaces/Theme';
 import type { VectorProperties } from '@/interfaces/VectorProperties';
 import JSZip from 'jszip';
+import type { ActionEvent } from '@/interfaces/ActionEvent';
 
 export async function mvctToObject(mvctFile: File): Promise<Mvct> {
 	const zip = await JSZip.loadAsync(mvctFile);
@@ -15,7 +16,10 @@ export async function mvctToObject(mvctFile: File): Promise<Mvct> {
 	const js = zip.file('main.js');
 	const metadata = zip.file('metadata.json');
 	const theme = zip.file('theme.json');
+	const events = zip.file('events.json');
 	const assets = zip.folder('assets');
+
+	let eventsContent: ActionEvent[] = [];
 
 	if (!svg || !css || !js || !metadata || !theme || !assets) {
 		console.error('Contents:', svg, css, js, metadata, theme, assets);
@@ -27,6 +31,14 @@ export async function mvctToObject(mvctFile: File): Promise<Mvct> {
 	const jsContent = await js.async('string');
 	const vectorProperties: VectorProperties = JSON.parse(await metadata.async('string'));
 	const themeContent: MvctTheme = JSON.parse(await theme.async('string'));
+	// Compatability with older versions
+	if (events) {
+		const eventsString = await events.async('string');
+		console.log('Events string:', eventsString);
+		eventsContent = JSON.parse(eventsString);
+	} else {
+		eventsContent = [];
+	}
 
 	const images = assets.folder('images');
 	const fonts = assets.folder('fonts');
@@ -76,6 +88,7 @@ export async function mvctToObject(mvctFile: File): Promise<Mvct> {
 		css: cssContent,
 		js: jsContent,
 		theme: themeContent,
+		events: eventsContent,
 		assets: {
 			images: imageFiles,
 			fonts: fontFiles,
@@ -91,6 +104,7 @@ export async function objectToMvct(mvctObject: Mvct): Promise<File> {
 	zip.file('main.js', mvctObject.js);
 	zip.file('metadata.json', JSON.stringify(mvctObject.metadata));
 	zip.file('theme.json', JSON.stringify(mvctObject.theme));
+	zip.file('events.json', JSON.stringify(mvctObject.events));
 
 	const assets = zip.folder('assets');
 	const images = assets?.folder('images');
