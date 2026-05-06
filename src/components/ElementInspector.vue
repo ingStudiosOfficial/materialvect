@@ -67,9 +67,7 @@ onMounted(async () => {
 					@click="editorStore.deleteElement(editorStore.activeElement)"
 					>Delete</m3e-button
 				>
-				<m3e-button variant="outlined" disabled @click="openEventsDialog()"
-					>Events</m3e-button
-				>
+				<m3e-button variant="outlined" @click="openEventsDialog()">Events</m3e-button>
 			</m3e-button-group>
 			<p>X</p>
 			<input class="inspector-input" v-model.number="activeElementProperties.x" />
